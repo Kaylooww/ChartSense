@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChartSense mock chart (SYNTHETIC DATA)</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #0b1220; color: #e5e7eb; font: 14px/1.4 system-ui, sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+      header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px; background: #111a2e; border-bottom: 1px solid #1f2a44; }
+      header h1 { margin: 0; font-size: 15px; }
+      .tag { padding: 2px 8px; border-radius: 999px; border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, .12); font-weight: 700; font-size: 11px; letter-spacing: .04em; }
+      .meta { color: #94a3b8; font-size: 12px; }
+      .spacer { flex: 1; }
+      label { font-size: 12px; color: #94a3b8; }
+      input[type=number] { width: 84px; background: #0b1220; color: inherit; border: 1px solid #334155; border-radius: 6px; padding: 4px 6px; }
+      button { background: #1e293b; color: inherit; border: 1px solid #334155; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+      button:hover { background: #334155; }
+      main { flex: 1; display: grid; grid-template-columns: 1fr 220px; gap: 0; min-height: 0; }
+      #chart-wrap { position: relative; min-height: 360px; border-right: 1px solid #1f2a44; }
+      canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      aside { padding: 14px; background: #0e1627; font-size: 12px; color: #94a3b8; }
+      aside h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #cbd5e1; }
+      aside .decoy { margin-top: 14px; padding: 8px; border: 1px dashed #475569; border-radius: 6px; }
+      aside .decoy strong { color: #e5e7eb; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>MOCK/USD · 5m</h1>
+      <span class="tag">SYNTHETIC DEMO DATA · NOT A REAL MARKET</span>
+      <span class="meta" id="meta"></span>
+      <span class="spacer"></span>
+      <label>Seed <input id="seed" type="number" value="7" min="1" max="999999" /></label>
+      <button id="regen" type="button">Regenerate</button>
+    </header>
+    <main>
+      <div id="chart-wrap"><canvas id="chart" aria-label="Synthetic candlestick chart"></canvas></div>
+      <aside>
+        <h2>Not part of the chart</h2>
+        <p>This sidebar stands in for account details a real site would show next to the chart. Practise excluding it when you select the chart region.</p>
+        <div class="decoy">
+          <div>Demo user: <strong>test-user</strong></div>
+          <div>Demo balance: <strong>$10,000.00</strong></div>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      // Deterministic synthetic candles. Nothing here is real market data.
+      function mulberry32(seed) {
+        return function () {
+          seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+          let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function generate(seed, count) {
+        const rand = mulberry32(seed);
+        const candles = [];
+        let price = 1.1;
+        let drift = 0;
+        for (let i = 0; i < count; i++) {
+          if (i % 25 === 0) drift = (rand() - 0.5) * 0.0016;
+          const open = price;
+          const close = open + drift + (rand() - 0.5) * 0.0022;
+          const high = Math.max(open, close) + rand() * 0.0009;
+          const low = Math.min(open, close) - rand() * 0.0009;
+          candles.push({ open, high, low, close });
+          price = close;
+        }
+        return candles;
+      }
+
+      const canvas = document.getElementById('chart');
+      const ctx = canvas.getContext('2d');
+      const seedInput = document.getElementById('seed');
+      const meta = document.getElementById('meta');
+      let candles = generate(Number(seedInput.value), 90);
+
+      function draw() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const W = rect.width, H = rect.height;
+        const padL = 12, padR = 64, padT = 16, padB = 28;
+        const plotW = W - padL - padR, plotH = H - padT - padB;
+
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect(0, 0, W, H);
+
+        const hi = Math.max(...candles.map((c) => c.high));
+        const lo = Math.min(...candles.map((c) => c.low));
+        const span = hi - lo || 1;
+        const y = (p) => padT + (1 - (p - lo) / span) * plotH;
+
+        ctx.font = '11px ui-monospace, monospace';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i <= 6; i++) {
+          const p = lo + (span * i) / 6;
+          ctx.strokeStyle = '#1b2742';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(padL, y(p)); ctx.lineTo(W - padR, y(p)); ctx.stroke();
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText(p.toFixed(5), W - padR + 6, y(p));
+        }
+
+        const step = plotW / candles.length;
+        const body = Math.max(2, step * 0.62);
+        candles.forEach((c, i) => {
+          const x = padL + step * (i + 0.5);
+          const up = c.close >= c.open;
+          ctx.strokeStyle = ctx.fillStyle = up ? '#34d399' : '#f43f5e';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(x, y(c.high)); ctx.lineTo(x, y(c.low)); ctx.stroke();
+          const top = y(Math.max(c.open, c.close));
+          ctx.fillRect(x - body / 2, top, body, Math.max(1, Math.abs(y(c.open) - y(c.close))));
+        });
+
+        ctx.fillStyle = '#64748b';
+        ctx.textBaseline = 'alphabetic';
+        for (let i = 0; i < candles.length; i += 15) {
+          const x = padL + step * (i + 0.5);
+          ctx.fillText('T+' + i * 5 + 'm', x - 14, H - 9);
+        }
+
+        ctx.save();
+        ctx.translate(W / 2 - 40, H / 2);
+        ctx.rotate(-0.18);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.10)';
+        ctx.font = '700 34px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SYNTHETIC · NOT REAL', 0, 0);
+        ctx.restore();
+
+        meta.textContent = 'seed ' + seedInput.value + ' · ' + candles.length + ' candles · ' + Math.round(rect.width) + '×' + Math.round(rect.height) + ' CSS px · DPR ' + dpr;
+      }
+
+      document.getElementById('regen').addEventListener('click', () => {
+        candles = generate(Number(seedInput.value) || 1, 90);
+        draw();
+      });
+      window.addEventListener('resize', draw);
+      draw();
+    </script>
+  </body>
+</html>

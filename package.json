@@ -1,0 +1,22 @@
+{
+  "name": "chartsense",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ChartSense: local-first Chrome side-panel assistant for explainable chart analysis and paper trading. Analysis only; never places orders.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run build:watch -w apps/extension",
+    "build": "npm run build -w apps/extension",
+    "typecheck": "npm run typecheck -w apps/extension",
+    "lint": "npm run lint -w apps/extension",
+    "test": "npm run test -w apps/extension",
+    "mock-chart": "npm run mock-chart -w apps/extension",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+  }
+}

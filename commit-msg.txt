@@ -1,6 +1,25 @@
-chore: initialize ProjectTemplate with agent config and resource catalog
+feat(analysis): add Phase 2 OHLC rule engine (baseline-v0.1) and result card
 
-- Add AGENTS.md with resource-usage rules for coding agents
-- Add RESOURCES.md listing the vetted UI, animation, chart and 3D libraries
-- Add .claude/ settings and the .agents/ skills directory
-- Add skills-lock.json pinning the design-taste-frontend skill
+- Add Zod market types: Candle, DataSource, InstrumentType, ChartContext,
+  AnalysisResult (no confidence field, isSimulation, actionableAsOrder: false)
+- Add CSV/JSON OHLC import with size and row caps; ISO 8601 UTC or epoch-second
+  bar open times; "# SYNTHETIC" comment marks a file as demo data
+- Add strict bar validation: finite/positive prices, high/low bounds, sorted
+  unique timestamps, timeframe spacing, no gaps, 150-bar minimum, forming last
+  bar dropped; every issue reported with row numbers
+- Add EMA, Wilder RSI and MACD, tested against hand-computed values
+- Add baseline-v0.1: EMA20/EMA50 trend + swing structure, confirmed 2-close
+  breakout or EMA20 retest, RSI/MACD as veto-only filters; returns
+  UP / DOWN / WAIT / INSUFFICIENT_DATA with evidence, reason codes, source,
+  timestamps, timeframe, horizon and versioned parameters
+- Add synthetic OHLC fixtures and a deterministic generator: uptrend +
+  breakout, contradictory trend, too few bars, unsorted/duplicate timestamps,
+  invalid high/low
+- Replace the side-panel analysis placeholder with a chart-context form
+  (separate timeframe and horizon, no horizon default), OHLC file import and a
+  structured result card; conventional mode shows BUY/SELL
+- Update roadmap (Phase 2 done), DECISIONS D-013..D-019, fixtures README and
+  README
+
+Verified: npm run check (138 tests) and the unpacked extension in Chrome 156
+with the mock chart. Not verified by hand in a normal Chrome window.

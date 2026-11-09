@@ -1,0 +1,9 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "eslint.workingDirectories": [{ "directory": "apps/extension", "changeProcessCWD": true }],
+  "files.associations": { "*.css": "tailwindcss" },
+  "css.lint.unknownAtRules": "ignore",
+  "search.exclude": { "**/dist": true, "**/node_modules": true, ".agents": true, ".claude/skills": true }
+}

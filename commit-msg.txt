@@ -1,0 +1,6 @@
+chore: initialize ProjectTemplate with agent config and resource catalog
+
+- Add AGENTS.md with resource-usage rules for coding agents
+- Add RESOURCES.md listing the vetted UI, animation, chart and 3D libraries
+- Add .claude/ settings and the .agents/ skills directory
+- Add skills-lock.json pinning the design-taste-frontend skill

@@ -1,0 +1,89 @@
+
+name: Initialize README from ProjectTemplate
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  initialize-readme:
+    # Protect the original template repository
+    if: github.repository != 'Kaylooww/ProjectTemplate' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create project-specific README once
+        env:
+          PROJECT_NAME: ${{ github.event.repository.name }}
+          PROJECT_DESCRIPTION: ${{ github.event.repository.description }}
+        run: |
+          if [ -f .project-template-initialized ]; then
+            echo "README already initialized."
+            exit 0
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          name = os.environ["PROJECT_NAME"]
+          description = os.environ.get("PROJECT_DESCRIPTION", "").strip()
+
+          if not description:
+              description = "Describe what this project does."
+
+          readme = f"""# {name}
+
+          {description}
+
+          ## Overview
+
+          Explain the problem this project solves and who it is for.
+
+          ## Features
+
+          - Feature 1
+          - Feature 2
+          - Feature 3
+
+          ## Tech Stack
+
+          List the technologies used in this project.
+
+          ## Getting Started
+
+          Add prerequisites, installation instructions, environment variables, and run commands.
+
+          ## Project Structure
+
+          Document the main directories and files.
+
+          ## AI-Assisted Development
+
+          Initialized from [ProjectTemplate](https://github.com/Kaylooww/ProjectTemplate).
+
+          See `AGENTS.md` and `RESOURCES.md` for development guidance.
+
+          ## Author
+
+          [Kaylooww](https://github.com/Kaylooww)
+          """
+
+          Path("README.md").write_text(readme, encoding="utf-8")
+          Path(".project-template-initialized").write_text(
+              "README initialized from ProjectTemplate.\n",
+              encoding="utf-8"
+          )
+          PY
+
+          git config user.name "Kyle Angelo C. Castro"
+          git config user.email "kaylocastro1@gmail.com"
+          git add README.md .project-template-initialized
+          git commit -m "docs: initialize project README"
+          git push

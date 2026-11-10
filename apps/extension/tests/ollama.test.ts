@@ -16,12 +16,17 @@ function fakeFetch(respond: (call: Call) => Response | Promise<Response>) {
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 const reply = (content: unknown) => json({ message: { role: 'assistant', content: JSON.stringify(content) }, done: true });
+const imagesOf = (call: Call) => (JSON.parse(String(call.init!.body)) as { messages: { images: string[] }[] }).messages[0]!.images;
+/** Answers the whole-chart question with `main` and the newest-candles strip ('BBBB') with `move`. */
+const twoStep = (main: unknown, move: unknown = { latestMove: 'pulled_back_then_turned_up' }) =>
+  fakeFetch((call) => reply(imagesOf(call)[0] === 'BBBB' ? move : main));
 
 const GOOD = {
   imageQuality: 'readable',
   candlesVisible: true,
   visibleTrend: 'upward_appearance',
-  patterns: ['higher_highs_higher_lows', 'breakout_above_recent_range'],
+  structure: 'higher_highs_higher_lows',
+  completedSetups: ['bull_flag_breakout'],
   visibleTimeframeLabel: '5m',
   notes: ['recent candles slope upward', 'price near 1.1050 resistance'],
 };
@@ -63,10 +68,10 @@ describe('gateNotes', () => {
 });
 
 describe('observeChart', () => {
-  const base = { pngBase64: 'AAAA', capturedAt: '2026-11-10T07:59:58Z', model: 'qwen3-vl:4b-instruct' as const };
+  const base = { pngBase64: 'AAAA', recentBase64: 'BBBB', capturedAt: '2026-11-10T07:59:58Z', model: 'qwen3-vl:4b-instruct' as const };
 
-  it('sends only the given image with a JSON schema and returns a gated visual-only observation', async () => {
-    const { fn, calls } = fakeFetch(() => reply(GOOD));
+  it('asks about the whole crop, then the newest-candles strip, and returns a gated visual-only observation', async () => {
+    const { fn, calls } = twoStep(GOOD);
     const out = await observeChart({ ...base, signal: new AbortController().signal, fetchFn: fn, now: clock() });
     expect(calls[0]!.url).toBe('http://127.0.0.1:11434/api/chat');
     const body = JSON.parse(String(calls[0]!.init!.body)) as Record<string, unknown> & { messages: { images: string[] }[] };
@@ -74,7 +79,10 @@ describe('observeChart', () => {
     expect(body.stream).toBe(false);
     expect(body.think).toBe(false); // thinking builds are far too slow for short horizons
     expect(body.messages[0]!.images).toEqual(['AAAA']);
-    expect(body.format).toMatchObject({ type: 'object', required: expect.arrayContaining(['visibleTrend', 'notes']) });
+    expect(body.format).toMatchObject({ type: 'object', required: expect.arrayContaining(['visibleTrend', 'structure', 'completedSetups', 'notes']) });
+    expect(calls).toHaveLength(2);
+    expect(imagesOf(calls[1]!)).toEqual(['BBBB']);
+    expect(JSON.parse(String(calls[1]!.init!.body)).format).toMatchObject({ required: ['latestMove'] });
 
     expect(out.ok).toBe(true);
     if (!out.ok) return;
@@ -82,6 +90,7 @@ describe('observeChart', () => {
       source: 'visual_only',
       observationMethod: 'ollama:qwen3-vl:4b-instruct',
       visibleTrend: 'upward_appearance',
+      patterns: ['higher_highs_higher_lows', 'pullback_resumed_up', 'bull_flag_breakout'],
       notes: ['recent candles slope upward'],
       droppedNotes: 1,
       reliableNumericOHLC: false,
@@ -94,12 +103,18 @@ describe('observeChart', () => {
 
   it('rejects replies that are not JSON or do not match the schema', async () => {
     const notJson = fakeFetch(() => json({ message: { content: 'The chart goes up!' } })).fn;
-    const wrong = fakeFetch(() => reply({ ...GOOD, visibleTrend: 'BUY NOW', confidence: 0.95 })).fn;
-    const unknownPattern = fakeFetch(() => reply({ ...GOOD, patterns: ['cup_and_handle'] })).fn;
-    for (const fetchFn of [notJson, wrong, unknownPattern]) {
+    const wrong = twoStep({ ...GOOD, visibleTrend: 'BUY NOW', confidence: 0.95 }).fn;
+    const unknownPattern = twoStep({ ...GOOD, completedSetups: ['cup_and_handle'] }).fn;
+    const badMove = twoStep(GOOD, { latestMove: 'to_the_moon' }).fn;
+    for (const fetchFn of [notJson, wrong, unknownPattern, badMove]) {
       const out = await observeChart({ ...base, signal: new AbortController().signal, fetchFn });
       expect(out).toMatchObject({ ok: false, code: 'bad_response' });
     }
+  });
+
+  it('adds no pattern when the latest move is none', async () => {
+    const out = await observeChart({ ...base, signal: new AbortController().signal, fetchFn: twoStep({ ...GOOD, completedSetups: [] }, { latestMove: 'none' }).fn });
+    expect(out.ok && out.observation.patterns).toEqual(['higher_highs_higher_lows']);
   });
 
   it('maps 404 to model_missing and network failure to unreachable', async () => {

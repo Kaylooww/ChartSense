@@ -13,6 +13,8 @@ them; both change. Review date of the source list: 2026-11-09.
 | S5 | ExpertOption, Terms & Conditions (section 6.2 among others). https://en.expertoption.com/company/policy/terms/ | Restrictions on bots and abusive software; reason to avoid any automation. |
 | S6 | ExpertOption, FAQ. https://en.expertoption.com/trade/faq/ | Virtual demo funds. |
 | S7 | U.S. CFTC/SEC, *Investor Alert: Binary Options and Fraud*. https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_binaryoptions.html | All-or-nothing payoff character and risks; wording of the risk notice. |
+| S9 | `reference/stock_trends_buy_sell_guide.pdf`, *Stock Trends, Patterns, and When to Buy or Sell*, pp. 1-3 (user-supplied, added 2026-11-10) | Trend definitions (higher highs/lows), pullback and breakout entries, completed-pattern rule, double bottom/top, (inverse) head and shoulders, triangles, flags, cup and handle; basis of `visual-v0.2`. General educational material, not a validated strategy. |
+| S10 | `reference/best_chart_patterns_trading_guide.pdf`, *Best Chart Patterns to Trade*, pp. 1-2 (user-supplied, added 2026-11-10) | Falling wedge (wait for the breakout), break confirmed by a candle close not a wick, confirmation checklist, beginner pattern focus; used in `visual-v0.3`. General educational material, not a validated strategy. |
 | S8 | Chromium, Extensions Security FAQ. https://chromium.googlesource.com/chromium/src/+/main/extensions/docs/security_faq.md | Manifest V3 and remote-code rules. |
 
 ## Provenance of design decisions

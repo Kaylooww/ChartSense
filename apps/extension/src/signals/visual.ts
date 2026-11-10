@@ -1,12 +1,14 @@
 import type { ObserveOutcome, VisualPattern } from '../analysis/ollama';
 import type { AnalysisResult, ChartContext, Direction } from '../types/market';
 
-export const VISUAL_STRATEGY_VERSION = 'visual-v0.1';
+export const VISUAL_STRATEGY_VERSION = 'visual-v0.3';
 
 /**
- * Engineering hypotheses (D-021), not validated settings. A directional candidate needs the model's
- * trend, its structure pattern and its breakout pattern to agree on two consecutive snapshots of the
- * same chart region, and the snapshot must be fresh relative to the prediction horizon.
+ * visual-v0.3 (D-021, D-026, D-028): the entry and exit setups of reference/stock_trends_buy_sell_guide.pdf (S9)
+ * plus the falling wedge and close-not-wick rule of best_chart_patterns_trading_guide.pdf (S10),
+ * applied to the model's visual observations. Engineering hypotheses, not validated settings.
+ * A direction needs at least one COMPLETED setup and no opposing one, seen on two consecutive
+ * snapshots of the same chart region, and the snapshot must be fresh relative to the horizon.
  */
 export const VISUAL_PARAMS = {
   /** Two agreeing snapshots may be at most this many monitoring intervals apart. */
@@ -14,6 +16,44 @@ export const VISUAL_PARAMS = {
   /** A snapshot older than this fraction of the horizon (capture -> result) is too late to use. */
   maxSnapshotAgeFraction: 0.5,
 } as const;
+
+type Setup = { code: string; rule: string; patterns: VisualPattern[]; needs: 'trend' | 'trend_or_range' | 'not_opposing' };
+
+/** Each setup: the reason code, the guide rule it implements, the patterns that trigger it, and the context it needs. */
+const SETUPS: Record<'UP' | 'DOWN', Setup[]> = {
+  UP: [
+    { code: 'PULLBACK_RESUMED', rule: 'Buy pullbacks in an uptrend that resume upward', patterns: ['pullback_resumed_up'], needs: 'trend' },
+    { code: 'VISIBLE_BREAKOUT', rule: 'Buy confirmed breakouts above a range', patterns: ['breakout_above_recent_range'], needs: 'trend_or_range' },
+    {
+      code: 'CONTINUATION_PATTERN_BREAKOUT',
+      rule: 'Buy when a triangle, flag or handle breaks upward',
+      patterns: ['ascending_triangle_breakout', 'bull_flag_breakout', 'cup_handle_breakout'],
+      needs: 'trend_or_range',
+    },
+    {
+      code: 'REVERSAL_PATTERN_BREAKOUT',
+      rule: 'Bullish reversal (double bottom, inverse head and shoulders, falling wedge) only after the breakout and once lower lows have stopped',
+      patterns: ['double_bottom_breakout', 'inverse_head_shoulders_breakout', 'falling_wedge_breakout'],
+      needs: 'not_opposing',
+    },
+  ],
+  DOWN: [
+    { code: 'PULLBACK_RESUMED', rule: 'Sell rallies in a downtrend that turn back down', patterns: ['pullback_resumed_down'], needs: 'trend' },
+    { code: 'VISIBLE_BREAKDOWN', rule: 'Sell when support breaks', patterns: ['breakdown_below_recent_range'], needs: 'trend_or_range' },
+    {
+      code: 'CONTINUATION_PATTERN_BREAKDOWN',
+      rule: 'Sell when a triangle or flag breaks downward',
+      patterns: ['descending_triangle_breakdown', 'bear_flag_breakdown'],
+      needs: 'trend_or_range',
+    },
+    {
+      code: 'REVERSAL_PATTERN_BREAKDOWN',
+      rule: 'Bearish reversal only after the neckline breaks and higher highs have stopped',
+      patterns: ['double_top_breakdown', 'head_shoulders_breakdown'],
+      needs: 'not_opposing',
+    },
+  ],
+};
 
 export type VisualCandidate = { direction: 'UP' | 'DOWN'; cropKey: string; capturedAtMs: number };
 
@@ -109,25 +149,45 @@ export function evaluateVisual(input: VisualInput): { result: AnalysisResult; ca
     reasonCodes.push('HORIZON_SHORTER_THAN_TIMEFRAME');
     return done('WAIT', 'The prediction horizon is shorter than the chart timeframe.');
   }
-  if (has('sideways_range')) {
-    reasonCodes.push('SIDEWAYS');
-    return done('WAIT', 'The chart looks sideways.');
-  }
+  const upTrend = o.visibleTrend === 'upward_appearance' && has('higher_highs_higher_lows') && !has('lower_highs_lower_lows');
+  const downTrend = o.visibleTrend === 'downward_appearance' && has('lower_highs_lower_lows') && !has('higher_highs_higher_lows');
+  const range = has('sideways_range');
+  const found = (dir: 'UP' | 'DOWN') => {
+    const trend = dir === 'UP' ? upTrend : downTrend;
+    const opposingStructure = has(dir === 'UP' ? 'lower_highs_lower_lows' : 'higher_highs_higher_lows');
+    return SETUPS[dir].filter(
+      (setup) =>
+        setup.patterns.some(has) &&
+        (setup.needs === 'trend' ? trend : setup.needs === 'trend_or_range' ? trend || (range && !opposingStructure) : !opposingStructure),
+    );
+  };
+  const up = found('UP');
+  const down = found('DOWN');
+  if (upTrend) reasonCodes.push('TREND_UP');
+  if (downTrend) reasonCodes.push('TREND_DOWN');
 
-  const up = o.visibleTrend === 'upward_appearance' && has('higher_highs_higher_lows') && !has('lower_highs_lower_lows');
-  const down = o.visibleTrend === 'downward_appearance' && has('lower_highs_lower_lows') && !has('higher_highs_higher_lows');
-  if (!up && !down) {
+  if (up.length && down.length) {
+    reasonCodes.push('SIGNAL_CONFLICT');
+    return done('WAIT', 'Bullish and bearish setups are both visible.');
+  }
+  if (!up.length && !down.length) {
+    if (range) {
+      reasonCodes.push('SIDEWAYS');
+      return done('WAIT', 'The chart is in a range: wait for a confirmed breakout.');
+    }
+    if (upTrend || downTrend) {
+      reasonCodes.push('NO_CONFIRMED_SETUP');
+      return done('WAIT', 'Trend is visible but no completed pullback, breakout or pattern yet.');
+    }
     reasonCodes.push('TREND_UNCLEAR');
     return done('WAIT', 'The visible trend and price structure do not agree.');
   }
-  const direction = up ? 'UP' : 'DOWN';
-  reasonCodes.push(up ? 'TREND_UP' : 'TREND_DOWN');
-
-  if (!has(up ? 'breakout_above_recent_range' : 'breakdown_below_recent_range')) {
-    reasonCodes.push('NO_VISIBLE_BREAKOUT');
-    return done('WAIT', 'Trend is visible but there is no visible breakout.');
+  const direction = up.length ? 'UP' : 'DOWN';
+  const setups = up.length ? up : down;
+  for (const setup of setups) {
+    reasonCodes.push(setup.code);
+    evidence.push(`Guide rule: ${setup.rule}.`);
   }
-  reasonCodes.push(up ? 'VISIBLE_BREAKOUT' : 'VISIBLE_BREAKDOWN');
 
   const candidate: VisualCandidate = { direction, cropKey, capturedAtMs: Date.parse(capturedAt) };
   const confirmed =
@@ -140,5 +200,5 @@ export function evaluateVisual(input: VisualInput): { result: AnalysisResult; ca
     return done('WAIT', `Possible ${direction} setup; waiting for the next snapshot to confirm it.`, [], candidate);
   }
   reasonCodes.push('CONFIRMED_ON_CONSECUTIVE_SNAPSHOTS');
-  return done(direction, `Visible ${up ? 'uptrend' : 'downtrend'} with a ${up ? 'breakout' : 'breakdown'} seen on two consecutive snapshots.`, [], candidate);
+  return done(direction, `${setups.map((x) => x.rule).join('; ')}. Seen on two consecutive snapshots.`, [], candidate);
 }

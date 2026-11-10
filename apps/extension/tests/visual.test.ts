@@ -63,15 +63,36 @@ describe('visual-v0.1', () => {
   });
 
   it.each([
-    ['trend without breakout', obs({ patterns: ['higher_highs_higher_lows'] }), 'NO_VISIBLE_BREAKOUT'],
+    ['trend without a completed setup', obs({ patterns: ['higher_highs_higher_lows'] }), 'NO_CONFIRMED_SETUP'],
     ['trend vs structure conflict', obs({ patterns: ['lower_highs_lower_lows', 'breakout_above_recent_range'] }), 'TREND_UNCLEAR'],
     ['unclear trend', obs({ visibleTrend: 'unclear' }), 'TREND_UNCLEAR'],
-    ['sideways', obs({ patterns: ['sideways_range', 'higher_highs_higher_lows', 'breakout_above_recent_range'] }), 'SIDEWAYS'],
+    ['range without breakout', obs({ visibleTrend: 'sideways_appearance', patterns: ['sideways_range'] }), 'SIDEWAYS'],
+    ['pullback in an uptrend that has not resumed (no pattern)', obs({ patterns: ['higher_highs_higher_lows'] }), 'NO_CONFIRMED_SETUP'],
+    ['reversal pattern while lower lows continue', obs({ visibleTrend: 'downward_appearance', patterns: ['lower_highs_lower_lows', 'double_bottom_breakout'] }), 'NO_CONFIRMED_SETUP'],
+    ['falling wedge while lower lows continue', obs({ visibleTrend: 'downward_appearance', patterns: ['lower_highs_lower_lows', 'falling_wedge_breakout'] }), 'NO_CONFIRMED_SETUP'],
+    ['bullish and bearish setups together', obs({ visibleTrend: 'sideways_appearance', patterns: ['sideways_range', 'breakout_above_recent_range', 'breakdown_below_recent_range'] }), 'SIGNAL_CONFLICT'],
     ['poor image', obs({ imageQuality: 'poor' }), 'LOW_IMAGE_QUALITY'],
   ])('%s -> WAIT', (_, outcome, code) => {
     const r = run({ outcome }).result;
     expect(r.status).toBe('WAIT');
     expect(r.reasonCodes).toContain(code);
+  });
+
+  it.each([
+    ['pullback resumed in an uptrend', obs({ patterns: ['higher_highs_higher_lows', 'pullback_resumed_up'] }), 'UP', 'PULLBACK_RESUMED'],
+    ['range breakout', obs({ visibleTrend: 'sideways_appearance', patterns: ['sideways_range', 'breakout_above_recent_range'] }), 'UP', 'VISIBLE_BREAKOUT'],
+    ['bull flag breakout in an uptrend', obs({ patterns: ['higher_highs_higher_lows', 'bull_flag_breakout'] }), 'UP', 'CONTINUATION_PATTERN_BREAKOUT'],
+    ['double bottom breakout after a decline', obs({ visibleTrend: 'downward_appearance', patterns: ['double_bottom_breakout'] }), 'UP', 'REVERSAL_PATTERN_BREAKOUT'],
+    ['falling wedge breakout after a decline', obs({ visibleTrend: 'downward_appearance', patterns: ['falling_wedge_breakout'] }), 'UP', 'REVERSAL_PATTERN_BREAKOUT'],
+    ['bear flag breakdown in a downtrend', obs({ visibleTrend: 'downward_appearance', patterns: ['lower_highs_lower_lows', 'bear_flag_breakdown'] }), 'DOWN', 'CONTINUATION_PATTERN_BREAKDOWN'],
+    ['head and shoulders breakdown', obs({ visibleTrend: 'upward_appearance', patterns: ['head_shoulders_breakdown'] }), 'DOWN', 'REVERSAL_PATTERN_BREAKDOWN'],
+  ])('guide setup: %s -> %s after confirmation', (_, outcome, direction, code) => {
+    const first = run({ outcome });
+    expect(first.result.status).toBe('WAIT'); // a single snapshot is never enough
+    const second = run({ outcome, previous: first.candidate });
+    expect(second.result.status).toBe(direction);
+    expect(second.result.reasonCodes).toContain(code);
+    expect(second.result.evidence.some((e) => e.startsWith('Guide rule:'))).toBe(true);
   });
 
   it.each([

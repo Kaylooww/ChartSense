@@ -107,7 +107,9 @@ export function useMonitor(opts: {
       try {
         // Only the cropped region is sent, downscaled, to Ollama on loopback.
         const pngBase64 = await downscaleToBase64(crop.value.dataUrl);
-        outcome = await observeChart({ pngBase64, capturedAt: frame.capturedAt, model, signal });
+        // shortcut: "newest candles" = right 30% of the crop, whatever the candle width; make it configurable if crops vary a lot.
+        const recentBase64 = await downscaleToBase64(crop.value.dataUrl, 1024, 0.7);
+        outcome = await observeChart({ pngBase64, recentBase64, capturedAt: frame.capturedAt, model, signal });
       } catch {
         outcome = { ok: false, code: 'bad_response', message: 'Could not prepare the image.' };
       }

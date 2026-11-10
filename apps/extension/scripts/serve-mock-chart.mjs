@@ -38,6 +38,13 @@ const server = createServer(async (req, res) => {
   }
 });
 
+server.on('error', (error) => {
+  if (error.code !== 'EADDRINUSE') throw error;
+  console.error(`Port ${PORT} is already in use: the mock chart is probably already running at http://${HOST}:${PORT}/`);
+  console.error(`Open that address, or stop the other server (or run with a different PORT, e.g. PORT=5200).`);
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`Mock chart (synthetic data) running at http://${HOST}:${PORT}/`);
   console.log('Press Ctrl+C to stop.');

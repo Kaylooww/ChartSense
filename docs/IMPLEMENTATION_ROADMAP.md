@@ -67,6 +67,9 @@ On 2026-11-10 the owner asked for live website analysis instead of file uploads,
 - [x] `signals/visual.ts` (`visual-v0.1`): deterministic rule over visual observations (trend + structure + breakout on two consecutive snapshots), stale-snapshot and horizon checks; WAIT / INSUFFICIENT_DATA otherwise.
 - [x] Visual observations kept separate from OHLC: `source: visual_only`, no indicator values, no confidence.
 - [x] CSP locked to loopback Ollama; security tests updated (D-020).
+- [x] `visual-v0.2`: setups from the stock-trends guide (S9), forced-choice structure, explicit prompt criteria (D-026).
+- [x] Latest move asked on a zoomed strip of the newest candles; fixes the model never reporting a setup (D-027).
+- [x] `visual-v0.3`: falling wedge and close-not-wick rule from the best-chart-patterns guide (S10); overextended filter rejected as biased (D-028).
 - [ ] Measure how often the model's pattern readings are right (use the Phase 4 journal).
 
 ## Phase 4: Journal (done)

@@ -27,6 +27,30 @@ function statusLabel(r: AnalysisResult): string {
   return r.status === 'INSUFFICIENT_DATA' ? 'INSUFFICIENT DATA' : r.status;
 }
 
+/**
+ * What the signal means in a platform's own button words: on fixed-expiry platforms BUY means
+ * "price will be higher at expiry" and SELL means "lower". A suggestion only; nothing is ever clicked.
+ */
+export function suggestedAction(status: Direction): { action: 'BUY' | 'SELL' | null; text: string } {
+  if (status === 'UP') return { action: 'BUY', text: 'BUY: the setup points to a higher price at the end of your horizon.' };
+  if (status === 'DOWN') return { action: 'SELL', text: 'SELL: the setup points to a lower price at the end of your horizon.' };
+  return { action: null, text: 'No trade: wait for a clearer setup.' };
+}
+
+function ActionLine({ status }: { status: Direction }) {
+  const { action, text } = suggestedAction(status);
+  const tone = action === 'BUY' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' : action === 'SELL' ? 'border-rose-500/40 bg-rose-500/10 text-rose-200' : 'border-zinc-700 bg-zinc-800/60 text-zinc-300';
+  return (
+    <div className={`rounded-md border px-2.5 py-1.5 ${tone}`}>
+      <p className="text-sm">
+        Suggested action: <span className="text-base font-bold tracking-wide">{action ?? 'WAIT'}</span>
+      </p>
+      <p className="text-xs opacity-90">{text}</p>
+      <p className="text-[11px] opacity-75">Simulated suggestion only. ChartSense never places the trade; you decide.</p>
+    </div>
+  );
+}
+
 const n = (v: number) => (Math.abs(v) >= 1000 ? v.toFixed(2) : v.toPrecision(6));
 
 export function AnalysisResultCard({ result: r }: { result: AnalysisResult }) {
@@ -57,6 +81,7 @@ export function AnalysisResultCard({ result: r }: { result: AnalysisResult }) {
         </span>
         <span className="text-[11px] text-zinc-400">Rule-based · uncalibrated · simulation only</span>
       </div>
+      <ActionLine status={r.status} />
       <p className="text-sm text-zinc-100">{r.explanation}</p>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-zinc-400">

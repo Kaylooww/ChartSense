@@ -589,6 +589,7 @@ These choices can be set as safe defaults during implementation and later change
 - **Live website analysis is now the primary input.** ChartSense captures the authorized tab at a user-chosen interval while monitoring is on, and analyzes the cropped chart with a **local** vision model (Ollama, `qwen3-vl:4b`; free, no cloud, loopback only).
 - **Screenshot-based UP / DOWN is allowed** through the deterministic `visual-v0.1` rule over constrained visual observations, with two-snapshot confirmation. It still never derives prices, EMA, RSI or MACD from pixels, never shows a confidence number, and returns WAIT / INSUFFICIENT DATA when the chart, model or context is inadequate. This supersedes the earlier FR-03/FR-04 limit that screenshots alone could only yield WAIT.
 - **OHLC file import** remains, as a developer/testing tool, not part of monitoring.
+- **`visual-v0.2`** (D-026) applies the setups of the second user guide, `reference/stock_trends_buy_sell_guide.pdf` [S9]: pullbacks, range breakouts, completed continuation and reversal patterns. A pattern counts only after it completes. **`visual-v0.3`** (D-028) adds the falling wedge and the close-not-wick rule from `reference/best_chart_patterns_trading_guide.pdf` [S10].
 
 ## 14. Recommended first prompt to a coding AI
 

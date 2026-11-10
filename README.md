@@ -181,6 +181,10 @@ Import format: CSV with header `time,open,high,low,close[,volume]` (or a JSON ar
 - Loaded unpacked in Chrome 156 (headless, driven over the DevTools protocol) next to the mock chart page: the panel imported each fixture and showed UP / WAIT / INSUFFICIENT DATA as listed in `fixtures/ohlc/README.md`, listed missing context fields when the form was empty, showed BUY in conventional mode, cleared the result on input change, and logged no console errors or warnings.
 - **Not verified:** the Phase 2 card by hand in a normal Chrome window, and keyboard/screen-reader use of the new form.
 
+## Model training and evaluation (phase T1)
+
+`training/` builds labeled chart examples, evaluates local models through the extension's own request code, and backtests the rule engine without look-ahead. No model has been trained yet. Start with [`training/README.md`](training/README.md); the baseline is in [`training/reports/BASELINE.md`](training/reports/BASELINE.md). To contribute real examples, use **Prepare export of this crop** in the side panel's screenshot section: nothing is saved unless you tick the privacy box and click **Save training file**.
+
 ## AI-assisted development
 
 Initialized from [ProjectTemplate](https://github.com/Kaylooww/ProjectTemplate). See `AGENTS.md`, `RESOURCES.md` and `docs/AI_BUILD_PROMPT.md`.

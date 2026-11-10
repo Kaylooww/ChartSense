@@ -28,3 +28,12 @@ npm-debug.log*
 chartsense-export-*.json
 chartsense-export-*.csv
 
+
+# Training data: real screenshots are private and never committed; synthetic data is regenerable
+chartsense-training-*.json
+training/data/real/
+training/data/synthetic/
+training/data/splits.json
+training/data/sft/
+training/data/exports/
+training/data/splits-*.json

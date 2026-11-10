@@ -69,9 +69,9 @@ export const ModelObservationSchema = z.object({
  * Second question, asked on a zoomed strip of only the newest candles: on the whole chart the model
  * just repeated the overall trend; on the strip it judged the latest move correctly (D-027).
  */
-const LatestMoveSchema = z.object({ latestMove: z.enum([...(Object.keys(LATEST_MOVES) as (keyof typeof LATEST_MOVES)[]), 'none']) });
+export const LatestMoveSchema = z.object({ latestMove: z.enum([...(Object.keys(LATEST_MOVES) as (keyof typeof LATEST_MOVES)[]), 'none']) });
 
-const MOVE_PROMPT = [
+export const MOVE_PROMPT = [
   'This image shows only the most recent candles at the right edge of a candlestick chart. Compare the last three candles with the candles before them.',
   'latestMove, choose exactly one:',
   // Guide S10: a break counts only with a candle close, not a brief wick.
@@ -110,7 +110,8 @@ export type ObserveOutcome =
 
 type FetchFn = typeof fetch;
 
-const PROMPT = [
+/** Exported so the training pipeline uses exactly what the extension sends (training/README.md). */
+export const PROMPT = [
   'This image is a cropped screenshot of a candlestick price chart. Describe only what is visibly shown.',
   'Do not estimate prices, indicator values (EMA, RSI, MACD), times, or future movement. Use no numbers in notes.',
   // Explicit criteria: without them the model rated clean charts "poor" and everything "unclear" (D-026).
@@ -145,6 +146,21 @@ export async function checkOllama(model: VisionModel, fetchFn: FetchFn = fetch, 
 export function gateNotes(notes: string[]): { kept: string[]; dropped: number } {
   const kept = notes.filter((n) => !/\d/.test(n));
   return { kept, dropped: notes.length - kept.length };
+}
+
+/** Structure, latest move and named setups as one de-duplicated list (shared with the training metrics). */
+export function patternsFrom(
+  structure: z.infer<typeof ModelObservationSchema>['structure'],
+  latestMove: z.infer<typeof LatestMoveSchema>['latestMove'],
+  completedSetups: VisualPattern[],
+): VisualPattern[] {
+  return [
+    ...new Set<VisualPattern>([
+      ...(structure === 'unclear' ? [] : [structure]),
+      ...(latestMove === 'none' ? [] : [LATEST_MOVES[latestMove]]),
+      ...completedSetups,
+    ]),
+  ];
 }
 
 type Chat<T> = { ok: true; data: T } | Extract<ObserveOutcome, { ok: false }>;
@@ -217,14 +233,7 @@ export async function observeChart(opts: {
   if (!move.ok) return move;
 
   const { structure, completedSetups, ...seen } = main.data;
-  const { latestMove } = move.data;
-  const patterns = [
-    ...new Set<VisualPattern>([
-      ...(structure === 'unclear' ? [] : [structure]),
-      ...(latestMove === 'none' ? [] : [LATEST_MOVES[latestMove]]),
-      ...completedSetups,
-    ]),
-  ];
+  const patterns = patternsFrom(structure, move.data.latestMove, completedSetups);
   const { kept, dropped } = gateNotes(seen.notes);
   const finished = now();
   return {

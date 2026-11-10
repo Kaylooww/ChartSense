@@ -1,66 +1,91 @@
-feat(signals): guide-based setups (visual-v0.3), BUY/SELL action, fix model never producing UP/DOWN
+feat(training): T1 dataset and baseline; real-crop import, AI drafts and review
 
-Apply the setups of the user-supplied guides
-reference/stock_trends_buy_sell_guide.pdf (S9) and
-reference/best_chart_patterns_trading_guide.pdf (S10) to live monitoring,
-and fix the reasons the local model kept every result at WAIT.
+Start the model training track (D-029) with dataset creation and baseline
+evaluation. No model is trained and the extension's analysis is unchanged.
 
-visual-v0.3 (D-028, from S10)
-- Falling wedge breakout added as a bullish reversal (only after the
-  breakout and once lower lows have stopped)
-- Latest-move question: a break counts only when a candle CLOSES beyond the
-  level, not a brief wick (answers on all four test strips unchanged)
-- Not added: overextended filter. The model called the uptrend strip
-  overextended but its exact mirror (downtrend) not, so the filter would
-  block UP and pass DOWN (biased). Higher-timeframe trend, volume, stop-loss
-  and 2:1 reward also left out (not visible / not fixed-expiry)
+Extension
+- ollama.ts: export PROMPT, MOVE_PROMPT, LatestMoveSchema and a shared
+  patternsFrom() so training data uses exactly what the extension sends
+  (behaviour unchanged)
+- Opt-in training export in the "show screenshot" section: Prepare export
+  of this crop -> review both model images -> privacy checkbox -> Save
+  training file link. The file holds the two images, capture time,
+  timeframe and a session id only (strict schema, no URL/site/account data);
+  nothing is stored or uploaded. The prepared export is a frozen snapshot
+  and stays mounted, so live monitoring does not reset a review (bug found
+  and fixed while testing in Chrome)
 
-Signal rule (introduced as visual-v0.2, D-026)
-- UP/DOWN when a completed setup fits its context and no opposing setup is
-  visible, on two consecutive snapshots: pullback resumed (needs the trend),
-  range breakout/breakdown and triangle/flag/cup-and-handle breakouts (need
-  the trend or a range), double bottom/top and (inverse) head and shoulders
-  (need the opposing structure to have stopped). Bullish + bearish -> WAIT
-  (SIGNAL_CONFLICT); trend without a completed setup -> WAIT
-  (NO_CONFIRMED_SETUP). Evidence cites the guide rule used. Moving-average
-  rules not used (cannot be measured from pixels)
+training/ workspace (Node runs TypeScript directly, no new dependencies)
+- lib/labels: labels derived from both structured-output schemas; example
+  folder format (chart.png, recent.png, example.json)
+- lib/synth + lib/png: deterministic synthetic charts with labels by
+  construction (8 scenarios; down scenarios mirror up ones to expose bias),
+  dependency-free PNG encoder, same 30% newest-candles strip
+- lib/split: chronological, group-aware 70/15/15 split (no session in two
+  splits; test newer than train)
+- lib/metrics: field accuracy, per-pattern precision/recall, invalid JSON
+  rate, latency mean/p50/p95, visual-v0.3 decision agreement vs gold
+- lib/backtest: walk-forward rule test with no look-ahead, non-overlapping
+  trades; lib/sft: chat-format SFT records from train/validation only
+- scripts: synth, import, validate, split, evaluate (real observeChart;
+  incomplete runs flagged), backtest (CSV or no-edge random walk),
+  prepare-sft; npm run training:* scripts; typecheck + tests in npm run check
+- Docs: training/README.md, finetune/README.md (QLoRA plan, NOT tested),
+  reports/BASELINE.md; DECISIONS D-029, roadmap training track,
+  PROJECT_CONTEXT, README; .gitignore for training data and exports
 
-Model requests (D-026, D-027)
-- Structure is a required single choice (higher highs/lows, lower highs/lows,
-  range, unclear); named chart patterns stay an optional list with one-line
-  definitions; explicit criteria for image quality and trend; ignore
-  watermarks and overlays
-- Each snapshot now asks two questions: the whole crop (quality, trend,
-  structure, named patterns), then a zoomed strip of the newest 30% of the
-  candles asking one required choice: broke above recent highs, broke below
-  recent lows, pulled back then turned up, bounced then turned down, none.
-  Both answers must be valid
-- downscaleToBase64 can keep only the right part of the crop (fromX)
-- Request code refactored into one validated chat() helper
+Real supplied crops (D-030, start of T2)
+- training:import-crops imports the 330-crop ExpertOption set (11 screenshots,
+  8 instruments) into data/real as source "user_crop", images prepared like
+  the extension (1024 px crop + newest 30% strip), labels always null (the
+  set's older LABEL_SCHEMA is never copied); group = instrument so
+  overlapping crops and same-session screenshots never cross splits
+- training:review: local labeling page (127.0.0.1:5210) showing both model
+  images and the allowed values; every save validated by LabelsSchema
+- lib/png: dependency-free PNG decoder and area-average downscale (+ test)
+- training:split --source real|synthetic (splits-<source>.json, real and
+  synthetic never mixed); training:eval --splits <file>, report records it
+- README: dataset limits and missing market conditions; DECISIONS D-030;
+  roadmap T2 in progress. No labels added, no model trained
 
-Why: on qwen3-vl:4b-instruct the optional pattern list stayed empty even on
-a clean uptrend, so every result was WAIT; asking the latest move on the
-whole chart made the model echo the overall trend. With the forced choices
-and the zoomed strip, four test crops now give: new highs -> UP, new lows ->
-DOWN, bottom turning up in a downtrend -> WAIT, dip in an uptrend that
-turned up -> UP (pullback), each in a few seconds.
+AI draft labeling and review workflow (D-031)
+- Review page: Auto-Label All with the local Ollama model (default
+  qwen3-vl:2b-instruct, editable), through the extension's real observeChart;
+  progress, cancel, 0-5 retries, missing model stops the run, each crop saved
+  immediately so a rerun resumes with unlabeled + failed crops only
+- Answers stored as example.json "draft" (labels, timeframe label, notes,
+  warnings, model, time, sha256 of both images); never written to labels
+- reviewStatus unlabeled/draft/approved/rejected/failed; schema enforces
+  labels set exactly when approved; Approve / Reject with note / Clear;
+  status filter with counts; model text HTML-escaped on the page
+- Line charts: candlesVisible forced false in drafts (flagged) and refused
+  on approval
+- Export Verified Dataset: approved real crops + images, labels.jsonl and
+  manifest with a chronological group-aware split (groups never cross),
+  draft model and whether the reviewer changed the draft
+- lib/annotate.mts (+ 9 tests: drafts, line charts, retries, resume,
+  cancel, model missing, concurrent review, approval rules, export);
+  page moved to scripts/review-page.mts; .gitignore data/exports and
+  splits-*.json
+- training:validate counted only user_export as real; now counts every
+  non-synthetic example (user_crop showed as 0 real)
 
-Other
-- Result card: "Suggested action" box under the signal: UP -> BUY (green),
-  DOWN -> SELL (red), anything else -> WAIT; says it is a simulated
-  suggestion and that ChartSense never places the trade (suggestedAction,
-  tested)
-- npm run mock-chart: clear "port already in use / already running" message
-  instead of an EADDRINUSE stack trace
-- Add reference/stock_trends_buy_sell_guide.pdf and
-  reference/best_chart_patterns_trading_guide.pdf; docs: SOURCES S9 and S10,
-  DECISIONS
-  D-026 to D-028, roadmap, PROJECT_CONTEXT, README
-- Tests: one case per guide setup, not-completed and conflict cases, two-step
-  request (strip image, latestMove schema, invalid move, move = none)
+- qwen3-vl:2b-instruct, 24 synthetic test charts: 0% invalid JSON,
+  latestMove 41.7%, structure 75%, rule decision agreement 50%, strong
+  upward bias, p95 8.3 s per image
+- baseline-v0.1 on a 3,000-bar no-edge random walk: 52.4% on 103 trades
+  (consistent with no edge and no look-ahead)
+- qwen3-vl:2b-instruct on the real test split (30 USD/BRL crops): 100% on
+  every field, but the gold labels are its own drafts approved unchanged,
+  so this is self-agreement, not accuracy (reports/BASELINE.md); latency
+  mean 2.6 s, p95 2.9 s per image
+- 4B run discarded: the Ollama desktop app shut down mid-run
 
-Verified: npm run check (186 tests); real qwen3-vl:4b-instruct + rule on
-four mock-chart crops; Chrome 156 run with a stand-in Ollama (crop 603x539
-then strip 181x539 per cycle, WAIT then UP). Not verified: accuracy on real
-ExpertOption charts, the 30% strip on very zoomed charts, or whether the
-signals win (use the Journal).
+Verified: npm run check (188 extension + 20 training tests, build); 330 crops
+imported and validated; review server: approve/reject/clear/export on a real
+crop (then restored), line-chart approval refused, bad model name refused;
+auto-label through observeChart against a stand-in Ollama on 127.0.0.1:11434
+(temp copy of 2 crops); page rendered in headless Chrome; Chrome 156 run of
+the extension export; export -> import -> validate round trip. Not done:
+auto-label with the real model (Ollama was not running), QLoRA training,
+real labels, 4B baseline.

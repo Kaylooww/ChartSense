@@ -1,0 +1,938 @@
+{
+  "model": "qwen3-vl:2b-instruct",
+  "split": "test",
+  "splitsCreatedAt": "2026-11-10T16:03:41.590Z",
+  "testSetFingerprint": "68b8cce5907a",
+  "evaluatedAt": "2026-11-10T16:05:29.506Z",
+  "report": {
+    "n": 24,
+    "answered": 24,
+    "invalidJsonRate": 0,
+    "errors": {},
+    "fieldAccuracy": {
+      "imageQuality": 0.875,
+      "candlesVisible": 0.875,
+      "visibleTrend": 0.75,
+      "structure": 0.75,
+      "latestMove": 0.4166666666666667
+    },
+    "patternMicro": {
+      "tp": 28,
+      "fp": 21,
+      "fn": 11,
+      "precision": 0.5714285714285714,
+      "recall": 0.717948717948718
+    },
+    "patterns": {
+      "breakdown_below_recent_range": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.3333333333333333
+      },
+      "breakout_above_recent_range": {
+        "tp": 3,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.3333333333333333,
+        "recall": 1
+      },
+      "bull_flag_breakout": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0,
+        "recall": null
+      },
+      "higher_highs_higher_lows": {
+        "tp": 9,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.6923076923076923,
+        "recall": 1
+      },
+      "lower_highs_lower_lows": {
+        "tp": 9,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.8181818181818182,
+        "recall": 1
+      },
+      "pullback_resumed_down": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "precision": null,
+        "recall": 0
+      },
+      "pullback_resumed_up": {
+        "tp": 6,
+        "fp": 8,
+        "fn": 0,
+        "precision": 0.42857142857142855,
+        "recall": 1
+      },
+      "sideways_range": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "precision": null,
+        "recall": 0
+      }
+    },
+    "decisionAgreement": 0.5,
+    "decisionConfusion": {
+      "UP->UP": 6,
+      "DOWN->NONE": 5,
+      "NONE->UP": 7,
+      "NONE->NONE": 5,
+      "DOWN->DOWN": 1
+    },
+    "latencyMs": {
+      "mean": 3452.4113333333335,
+      "p50": 2774.773100000002,
+      "p95": 8306.7184
+    }
+  },
+  "rows": [
+    {
+      "id": "syn-up-breakout-018",
+      "scenario": "up_breakout",
+      "latencyMs": 8307,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "broke_above_recent_highs"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with multiple green candles, indicating a bullish movement.",
+          "The most recent candles show a consistent upward pattern with higher highs and higher lows, forming a clear uptrend structure.",
+          "The price has moved from lower lows to higher highs, and the recent candles confirm this trend.",
+          "The candlestick pattern is not a completed setup, as no pattern has been fully formed in the latest candles."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:16:00.000Z",
+        "observedAt": "2026-11-10T16:04:14.860Z",
+        "durationMs": 8306,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-breakdown-018",
+      "scenario": "down_breakdown",
+      "latencyMs": 2388,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "broke_below_recent_lows"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with multiple red candles indicating a bearish movement.",
+          "The most recent candles show a clear downward trend, with the price moving from higher highs to lower lows.",
+          "The candlestick pattern suggests a downtrend, with the price closing below the previous low, indicating a potential continuation of the downward movement."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:17:00.000Z",
+        "observedAt": "2026-11-10T16:04:17.248Z",
+        "durationMs": 2387,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-up-pullback-resumed-018",
+      "scenario": "up_pullback_resumed",
+      "latencyMs": 2319,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with multiple green candles indicating price increases. The most recent candles show a higher high and higher low, confirming the uptrend structure."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:18:00.000Z",
+        "observedAt": "2026-11-10T16:04:19.567Z",
+        "durationMs": 2318,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-bounce-resumed-018",
+      "scenario": "down_bounce_resumed",
+      "latencyMs": 2525,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with a clear pattern of lower highs and lower lows.",
+          "The candlesticks are visible and can be distinguished from one another.",
+          "The most recent candles show a consistent downward movement, with the price closing below the previous low.",
+          "The chart does not show any completed chart patterns such as double tops, triangles, or flags."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:19:00.000Z",
+        "observedAt": "2026-11-10T16:04:22.092Z",
+        "durationMs": 2524,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-top-turning-down-018",
+      "scenario": "top_turning_down",
+      "latencyMs": 2213,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with multiple green candles indicating price increases. The most recent candles show a higher high and higher low, confirming an uptrend structure."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:20:00.000Z",
+        "observedAt": "2026-11-10T16:04:24.305Z",
+        "durationMs": 2210,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-bottom-turning-up-018",
+      "scenario": "bottom_turning_up",
+      "latencyMs": 2554,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with a clear dip in the middle, indicating a downtrend structure.",
+          "The candlesticks are visible and can be distinguished from one another.",
+          "The most recent candles show a clear downward movement, with the price closing below the previous low.",
+          "The chart does not show any completed chart patterns like double tops, triangles, or flags."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:21:00.000Z",
+        "observedAt": "2026-11-10T16:04:26.859Z",
+        "durationMs": 2553,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-range-018",
+      "scenario": "range",
+      "latencyMs": 2252,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "sideways_appearance",
+        "structure": "sideways_range",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a series of candlesticks with green and red bodies, indicating price movements. The most recent candles show a downward trend, with lower highs and lower lows, suggesting a downtrend structure."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:22:00.000Z",
+        "observedAt": "2026-11-10T16:04:29.110Z",
+        "durationMs": 2249,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-no-chart-018",
+      "scenario": "no_chart",
+      "latencyMs": 2485,
+      "gold": {
+        "imageQuality": "unreadable",
+        "candlesVisible": false,
+        "visibleTrend": "unclear",
+        "structure": "unclear",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a series of candlesticks with a consistent upward trend, indicating a bullish structure.",
+          "The most recent candles show higher highs and higher lows, which is a clear sign of an uptrend.",
+          "The candlestick pattern is not a completed setup, as no pattern has been fully formed in the latest candles."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:23:00.000Z",
+        "observedAt": "2026-11-10T16:04:31.595Z",
+        "durationMs": 2484,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-up-breakout-019",
+      "scenario": "up_breakout",
+      "latencyMs": 2390,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "broke_above_recent_highs"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with increasing green candles, indicating a bullish movement.",
+          "The most recent candles show a consistent upward pattern with higher highs and higher lows, forming a clear uptrend structure.",
+          "The candlestick pattern is not a completed setup as it is still in progress."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:24:00.000Z",
+        "observedAt": "2026-11-10T16:04:33.986Z",
+        "durationMs": 2390,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-breakdown-019",
+      "scenario": "down_breakdown",
+      "latencyMs": 2452,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "broke_below_recent_lows"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with red candles indicating a bearish pattern.",
+          "The price has been in a decreasing trend for a significant portion of the chart.",
+          "The most recent candles show a clear downward movement, with the price closing below the previous high.",
+          "The candlestick pattern suggests a potential continuation of the downtrend."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "breakdown_below_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:25:00.000Z",
+        "observedAt": "2026-11-10T16:04:36.437Z",
+        "durationMs": 2450,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-up-pullback-resumed-019",
+      "scenario": "up_pullback_resumed",
+      "latencyMs": 2211,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with increasing green candles, indicating a bullish movement. The most recent candles show a higher high and higher low, confirming the uptrend structure."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:26:00.000Z",
+        "observedAt": "2026-11-10T16:04:38.649Z",
+        "durationMs": 2211,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-bounce-resumed-019",
+      "scenario": "down_bounce_resumed",
+      "latencyMs": 2775,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with the most recent candles forming a clear downtrend.",
+          "The candlesticks are visible and can be distinguished from one another.",
+          "The price has been moving lower over time, with the most recent candles showing a clear downward movement.",
+          "The candlestick pattern is not a completed setup, but the trend is clearly downward."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:27:00.000Z",
+        "observedAt": "2026-11-10T16:04:41.424Z",
+        "durationMs": 2774,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-top-turning-down-019",
+      "scenario": "top_turning_down",
+      "latencyMs": 2874,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with increasing highs and lows, indicating a bullish structure.",
+          "The most recent candles show a consistent upward movement, with the price reaching a peak and then slightly declining, but the overall trend is still upward."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:28:00.000Z",
+        "observedAt": "2026-11-10T16:04:44.298Z",
+        "durationMs": 2873,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-bottom-turning-up-019",
+      "scenario": "bottom_turning_up",
+      "latencyMs": 3060,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with a clear dip in the lower portion of the chart.",
+          "The candlesticks are visible and the price action is clearly depicted.",
+          "The candlestick pattern shows a downward movement with a clear low point.",
+          "The candlestick pattern shows a downward movement with a clear low point.",
+          "The candlestick pattern shows a downward movement with a clear low point."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:29:00.000Z",
+        "observedAt": "2026-11-10T16:04:47.358Z",
+        "durationMs": 3058,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-range-019",
+      "scenario": "range",
+      "latencyMs": 2949,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "sideways_appearance",
+        "structure": "sideways_range",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a series of candlesticks with green and red bars, indicating price movements. The most recent candles show a downward trend, with the price making lower highs and lower lows. The structure of the chart is a downtrend, with the most recent candles showing a clear downward movement."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:30:00.000Z",
+        "observedAt": "2026-11-10T16:04:50.307Z",
+        "durationMs": 2948,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-no-chart-019",
+      "scenario": "no_chart",
+      "latencyMs": 3568,
+      "gold": {
+        "imageQuality": "unreadable",
+        "candlesVisible": false,
+        "visibleTrend": "unclear",
+        "structure": "unclear",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a pattern of price bars with increasing height, indicating an upward trend.",
+          "The candlesticks are arranged in a pattern where the highest highs are higher than the highest lows, suggesting an uptrend.",
+          "The structure is consistent with a higher highs and higher lows pattern, which is a bullish trend structure."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:31:00.000Z",
+        "observedAt": "2026-11-10T16:04:53.872Z",
+        "durationMs": 3564,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-up-breakout-020",
+      "scenario": "up_breakout",
+      "latencyMs": 4520,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "broke_above_recent_highs"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with multiple green candles, indicating a bullish movement.",
+          "The most recent candles show a consistent upward pattern with higher highs and higher lows, forming a clear uptrend structure.",
+          "The candlestick pattern is not a completed setup as the chart is not showing the full context of the pattern formation.",
+          "The candlestick pattern is not a completed setup as the chart is not showing the full context of the pattern formation."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:32:00.000Z",
+        "observedAt": "2026-11-10T16:04:58.397Z",
+        "durationMs": 4511,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-breakdown-020",
+      "scenario": "down_breakdown",
+      "latencyMs": 2638,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "broke_below_recent_lows"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with red candles indicating a bearish movement.",
+          "The price has been in a decreasing pattern with some minor fluctuations.",
+          "The most recent candles show a clear downward trend, with the price closing below the previous low.",
+          "The candlestick pattern suggests a downtrend, with the price moving lower over time."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:33:00.000Z",
+        "observedAt": "2026-11-10T16:05:01.041Z",
+        "durationMs": 2629,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-up-pullback-resumed-020",
+      "scenario": "up_pullback_resumed",
+      "latencyMs": 3827,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with increasing green candles, indicating a bullish movement.",
+          "The most recent candles show a higher high and higher low, confirming the uptrend structure.",
+          "The price has been rising steadily, with no clear reversal or consolidation patterns in the most recent candles."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:34:00.000Z",
+        "observedAt": "2026-11-10T16:05:04.867Z",
+        "durationMs": 3825,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-down-bounce-resumed-020",
+      "scenario": "down_bounce_resumed",
+      "latencyMs": 4167,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with red candles indicating a bearish pattern.",
+          "The price has been in a downtrend for a significant portion of the chart, with the most recent candles showing a continuation of the downward movement.",
+          "The candlestick pattern is consistent with a downtrend, with the price moving from higher highs to lower highs and lower lows.",
+          "The chart does not show any completed chart patterns such as double tops, double bottoms, or triangles."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:35:00.000Z",
+        "observedAt": "2026-11-10T16:05:09.034Z",
+        "durationMs": 4162,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-top-turning-down-020",
+      "scenario": "top_turning_down",
+      "latencyMs": 11007,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "structure": "higher_highs_higher_lows",
+        "completedSetups": [],
+        "latestMove": "bounced_then_turned_down"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with increasing green candles, indicating a bullish movement.",
+          "The most recent candles show a higher high and higher low, confirming the uptrend structure.",
+          "The candlestick pattern is not a completed setup as it is still in progress."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:36:00.000Z",
+        "observedAt": "2026-11-10T16:05:20.046Z",
+        "durationMs": 10999,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-bottom-turning-up-020",
+      "scenario": "bottom_turning_up",
+      "latencyMs": 3857,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "structure": "lower_highs_lower_lows",
+        "completedSetups": [],
+        "latestMove": "pulled_back_then_turned_up"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "downward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a downward trend with a clear dip at the end, indicating a potential reversal or continuation of a downtrend."
+        ],
+        "patterns": [
+          "lower_highs_lower_lows",
+          "pullback_resumed_up"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:37:00.000Z",
+        "observedAt": "2026-11-10T16:05:23.908Z",
+        "durationMs": 3853,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-range-020",
+      "scenario": "range",
+      "latencyMs": 2494,
+      "gold": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "sideways_appearance",
+        "structure": "sideways_range",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a clear upward trend with recent higher highs and higher lows, indicating a bullish structure. The candlestick pattern suggests a potential breakout from a consolidation phase."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range",
+          "bull_flag_breakout"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:38:00.000Z",
+        "observedAt": "2026-11-10T16:05:26.402Z",
+        "durationMs": 2493,
+        "reliableNumericOHLC": false
+      }
+    },
+    {
+      "id": "syn-no-chart-020",
+      "scenario": "no_chart",
+      "latencyMs": 3028,
+      "gold": {
+        "imageQuality": "unreadable",
+        "candlesVisible": false,
+        "visibleTrend": "unclear",
+        "structure": "unclear",
+        "completedSetups": [],
+        "latestMove": "none"
+      },
+      "predicted": {
+        "imageQuality": "readable",
+        "candlesVisible": true,
+        "visibleTrend": "upward_appearance",
+        "visibleTimeframeLabel": null,
+        "notes": [
+          "The chart shows a series of candlesticks with a consistent upward trend, indicating a bullish structure.",
+          "The most recent candles show higher highs and higher lows, which is a clear sign of an uptrend.",
+          "The candlesticks are arranged in a pattern that suggests the price is making higher highs and higher lows, forming a bullish structure.",
+          "The chart is not showing any completed chart patterns like double tops, triangles, or flags.",
+          "The candlestick pattern is not showing any specific chart patterns that have completed in the latest candles."
+        ],
+        "patterns": [
+          "higher_highs_higher_lows",
+          "breakout_above_recent_range"
+        ],
+        "droppedNotes": 0,
+        "source": "visual_only",
+        "observationMethod": "ollama:qwen3-vl:2b-instruct",
+        "capturedAt": "2026-01-01T02:39:00.000Z",
+        "observedAt": "2026-11-10T16:05:29.429Z",
+        "durationMs": 3026,
+        "reliableNumericOHLC": false
+      }
+    }
+  ]
+}

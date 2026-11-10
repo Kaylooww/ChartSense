@@ -10,6 +10,7 @@ import { OnboardingGate } from '../components/OnboardingGate';
 import { RiskNotice } from '../components/RiskNotice';
 import { SessionControls } from '../components/SessionControls';
 import { SourceCard } from '../components/SourceCard';
+import { TrainingExport } from '../components/TrainingExport';
 import { sendRequest } from './api';
 import { useCaptureFlow } from './hooks/useCaptureFlow';
 import { useCrop } from './hooks/useCrop';
@@ -138,6 +139,12 @@ export default function App() {
               <div className="mt-3 space-y-3">
                 <CropSelector frame={flow.frame} selection={flow.selection} stale={flow.stale} onCommit={flow.commitSelection} onClear={flow.clearSelection} />
                 <CropResult crop={crop} />
+                {/* Always mounted: monitoring re-crops every few seconds and must not reset a review in progress. */}
+                <TrainingExport
+                  crop={crop.status === 'done' && crop.outcome.ok ? crop.outcome.value : null}
+                  sessionStartedAt={session.startedAt}
+                  chartTimeframeSec={settings.context.chartTimeframeSec}
+                />
               </div>
             </details>
           ) : flow.frame ? (

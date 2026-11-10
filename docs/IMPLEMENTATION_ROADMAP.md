@@ -97,6 +97,14 @@ On 2026-11-10 the owner asked for live website analysis instead of file uploads,
 
 **Verified in Chrome 156 (automated, stand-in Ollama):** monitoring captures every 5 s, closing the panel turns "Capturing" into "Paused", settings come back after reopening, Stop ends everything.
 
+## Model training track (T1 done, T2 to T4 not started)
+
+- [x] **T1 dataset + baseline (D-029):** `training/` workspace, synthetic labeled charts, annotation validation, chronological group split, evaluator (accuracy, pattern P/R, invalid JSON, latency, decision agreement), leakage-free rule backtest, SFT export, opt-in privacy-reviewed training export in the side panel. Baseline for `qwen3-vl:2b-instruct` in `training/reports/BASELINE.md`.
+- [ ] Rerun the 4B baseline (Ollama shut down mid-run).
+- [ ] T2: collect and label a few hundred real, privacy-reviewed exports; re-baseline on real test data. In progress (D-030): 330 supplied crops imported with `training:import-crops`, labeling page `training:review` with model drafts, approve/reject review and verified export (D-031); labels and independent capture sessions still needed.
+- [ ] T3: QLoRA experiment (plan in `training/finetune/README.md`); install and verify tooling first.
+- [ ] T4: verify Ollama import of the fine-tuned vision model, evaluate on the same test fingerprint, add to the extension only if the gates pass.
+
 ## Phase 6 (optional)
 
 Only if journal results show the visual signals need better recognition: local OpenCV or a different model. Do not add Supabase or authentication.

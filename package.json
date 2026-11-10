@@ -17,6 +17,17 @@
     "lint": "npm run lint -w apps/extension",
     "test": "npm run test -w apps/extension",
     "mock-chart": "npm run mock-chart -w apps/extension",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run training:typecheck && npm run training:test && npm run build",
+    "training:synth": "node --import ./training/scripts/register.mjs training/scripts/synth.mts",
+    "training:import": "node --import ./training/scripts/register.mjs training/scripts/import-export.mts",
+    "training:import-crops": "node --import ./training/scripts/register.mjs training/scripts/import-crops.mts",
+    "training:review": "node --import ./training/scripts/register.mjs training/scripts/review.mts",
+    "training:validate": "node --import ./training/scripts/register.mjs training/scripts/validate.mts",
+    "training:split": "node --import ./training/scripts/register.mjs training/scripts/split.mts",
+    "training:eval": "node --import ./training/scripts/register.mjs training/scripts/evaluate.mts",
+    "training:backtest": "node --import ./training/scripts/register.mjs training/scripts/backtest.mts",
+    "training:sft": "node --import ./training/scripts/register.mjs training/scripts/prepare-sft.mts",
+    "training:typecheck": "tsc -p training",
+    "training:test": "vitest run --root training"
   }
 }

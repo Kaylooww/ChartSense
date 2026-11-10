@@ -4,7 +4,7 @@ A local-first Chrome side-panel assistant for learning disciplined chart analysi
 
 > **Analysis and simulation only.** ChartSense never places orders, never clicks anything on a trading site, never logs in, and never claims a signal is profitable. Nothing here is financial advice. See [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
 
-## Status: v0.1.0 (Phases 0 to 2 + live local-AI monitoring)
+## Status: v0.1.0 (Phases 0 to 5 done; Phase 6 optional)
 
 | Works now | Not built yet |
 |---|---|
@@ -60,7 +60,7 @@ npm run mock-chart   # serves synthetic candles at http://127.0.0.1:5199/
 
 ### Set up local AI (free, one time)
 
-1. Install Ollama for Windows from <https://ollama.com/download/windows> and run `ollama pull qwen3-vl:4b` (about 3.3 GB; use `qwen3-vl:2b` if 4B is too slow).
+1. Install Ollama for Windows from <https://ollama.com/download/windows> and run `ollama pull qwen3-vl:4b-instruct` (fastest; `qwen3-vl:2b-instruct` if 4B is too slow; the plain `qwen3-vl:4b` thinking build also works, more slowly).
 2. Allow the extension: in PowerShell, `setx OLLAMA_ORIGINS "chrome-extension://<extension id>"` (the panel's setup steps show your exact id), then quit Ollama from the tray and start it again.
 3. In the panel press **Check Ollama**. It should say "Connected · qwen3-vl:4b installed".
 
@@ -72,7 +72,14 @@ Without this, monitoring still runs but every result is INSUFFICIENT DATA with "
 2. In **Live analysis** fill in asset, instrument, chart timeframe and prediction horizon (these are separate; the horizon is never guessed), and choose the interval.
 3. Press **Start monitoring**. One screenshot appears: drag over the chart only (leave balances and account details out).
 4. ChartSense now recaptures and analyzes at the interval. A new setup first shows WAIT ("waiting for the next snapshot to confirm it"); UP / DOWN appears only if the next snapshot agrees.
-5. Press **Pause** or **Stop** (or close the panel) to end it. Resizing or zooming the page asks you to select the region again.
+5. A new UP / DOWN plays a short tone (switch it off in Live analysis) and flashes the card. After you select the region, the screenshot folds away; open "show screenshot" to re-select.
+6. Press **Pause** or **Stop** to end it. Closing the panel pauses it; press Resume after reopening. If the chart tab is in the background, monitoring waits until you switch back. If Ollama stops answering, it retries less often (up to once a minute). Your settings are remembered. Resizing or zooming the page asks you to select the region again.
+
+### Paper-trade the signals (Journal tab)
+
+1. When the Monitor shows UP / DOWN, enter a simulated stake and the payout your platform shows, then press **Record paper trade**. Nothing is sent to any website.
+2. After the horizon has passed, open **Journal**, check the result on your chart and press Won / Lost / Tie / Can't verify. Settling before expiry is not possible.
+3. The Journal compares your hit rate with the hit rate needed to break even at that payout (for 80%: 55.6%), and warns while the sample is too small to mean anything. Export as JSON or CSV.
 
 ### Try the OHLC rule engine (Developer tab)
 
@@ -146,6 +153,20 @@ Import format: CSV with header `time,open,high,low,close[,volume]` (or a JSON ar
 - `npm run check` passes: typecheck, lint, 110 unit tests, production build.
 - Loaded unpacked in Chrome 153 (headless, automated): service worker starts, panel renders with no console errors, onboarding gate works, capture and crop produce the expected pixel region, rate limiting, stale-selection prompt after a window resize, Stop clears frames and selection, and cross-site navigation ends the session. Without a real toolbar click, Chrome denies the capture and the panel shows "Capture permission expired".
 - **Not verified automatically:** the real toolbar-icon click granting `activeTab` and opening the side panel (headless Chrome cannot click the toolbar). Please run the "Try it on the mock chart" steps once by hand in a normal Chrome window.
+
+### What was verified for Phase 5 (2026-11-10)
+
+- `npm run check` passes: typecheck, lint, 173 unit tests, production build.
+- Chrome 156 (automated, stand-in Ollama): closing the panel turned "Capturing" into "Paused" and reopening did not restart capture; asset, timeframe, horizon, model and interval came back after reopening.
+- Real Ollama on this PC (`qwen3-vl:4b`, `think: false`): 15 s first answer, then 10 to 11 s; GPU memory peak about 6.1 GB of 8 GB.
+- **Not verified:** the background-tab pause and the failure back-off in a real browser (unit-tested only), and the `-instruct` model's speed (not pulled yet).
+
+### What was verified for the journal (2026-11-10)
+
+- `npm run check` passes: typecheck, lint, 168 unit tests, production build.
+- Chrome 156 (automated, stand-in Ollama): screenshot folds away after selection; UP signal recorded as a paper trade; OPEN with countdown; settle buttons appear only after expiry; Won gives 1 win, 100% hit rate vs 55.6% break-even, +0.80 units.
+- Real Ollama on this PC with `think: false`: 10.5 to 16 s per answer with the installed `qwen3-vl:4b`. The `-instruct` builds are not installed yet, so their speed is unmeasured.
+- **Not verified:** the tone (headless Chrome has no speakers), settlement against real platform outcomes.
 
 ### What was verified for live monitoring (2026-11-10)
 

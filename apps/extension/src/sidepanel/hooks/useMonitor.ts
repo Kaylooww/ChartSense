@@ -7,8 +7,9 @@ import { evaluateVisual, type VisualCandidate } from '../../signals/visual';
 import type { AnalysisResult, ChartContext } from '../../types/market';
 import type { CaptureFrame } from '../../types/messages';
 import type { LayoutSignature, RelRect } from '../../types/session';
+import { nextDelayMs } from '../monitorTiming';
 
-export type MonitorPhase = 'off' | 'starting' | 'needs_selection' | 'capturing' | 'analyzing' | 'waiting';
+export type MonitorPhase = 'off' | 'starting' | 'needs_selection' | 'tab_hidden' | 'capturing' | 'analyzing' | 'waiting';
 
 export type MonitorView = {
   phase: MonitorPhase;
@@ -19,14 +20,16 @@ export type MonitorView = {
   /** Failure of the last model call, if it failed (drives the connection status line). */
   modelFailure: Extract<ObserveOutcome, { ok: false }> | null;
   cycles: number;
+  /** Consecutive failed model calls; drives the retry back-off. */
+  failures: number;
 };
 
 type Run = Omit<MonitorView, 'phase'> & { key: string; phase: MonitorPhase };
 
-const IDLE: Omit<Run, 'key'> = { phase: 'starting', nextAt: null, result: null, observation: null, modelFailure: null, cycles: 0 };
+const IDLE: Omit<Run, 'key'> = { phase: 'starting', nextAt: null, result: null, observation: null, modelFailure: null, cycles: 0, failures: 0 };
 
 /**
- * Live monitoring loop, run by the side panel (closing the panel stops it). One cycle at a time:
+ * Live monitoring loop, run by the side panel (closing the panel pauses the session, D-025). One cycle at a time:
  * capture -> crop -> local model -> visual rule. The next cycle starts `intervalSec` after the previous
  * one started, or 1 s after it ended if it ran longer, so requests never overlap or queue up.
  * Any change of region, context, interval or model restarts the loop and hides older results.
@@ -37,6 +40,8 @@ export function useMonitor(opts: {
   selection: RelRect | null;
   selectionLayout: LayoutSignature | null;
   stale: boolean;
+  /** False while the authorized tab is in the background: cycles are skipped, not failed. */
+  sourceVisible: boolean | null;
   captureOnce: () => Promise<CaptureFrame | null>;
   context: ChartContext;
   intervalSec: number;
@@ -49,9 +54,9 @@ export function useMonitor(opts: {
   const [run, setRun] = useState<Run | null>(null);
 
   // Reading these through a ref lets the loop see the latest values without restarting on every frame.
-  const latest = useRef({ frame: opts.frame, selection, selectionLayout, stale, context });
+  const latest = useRef({ frame: opts.frame, selection, selectionLayout, stale, context, sourceVisible: opts.sourceVisible });
   useEffect(() => {
-    latest.current = { frame: opts.frame, selection, selectionLayout, stale, context };
+    latest.current = { frame: opts.frame, selection, selectionLayout, stale, context, sourceVisible: opts.sourceVisible };
   });
 
   useEffect(() => {
@@ -68,6 +73,7 @@ export function useMonitor(opts: {
       });
     let previous: VisualCandidate | null = null;
     let cycles = 0;
+    let failures = 0;
 
     /** Returns 'user' when the loop must stop and wait for a (new) region selection, which restarts it. */
     async function cycle(): Promise<'user' | void> {
@@ -80,6 +86,11 @@ export function useMonitor(opts: {
         }
         patch({ phase: 'needs_selection' });
         return 'user';
+      }
+      if (latest.current.sourceVisible === false) {
+        // Chrome can only capture the tab in front; wait quietly instead of raising capture errors.
+        patch({ phase: 'tab_hidden' });
+        return;
       }
       patch({ phase: 'capturing' });
       const frame = await captureOnce(); // failures are shown by the capture error banner
@@ -105,15 +116,16 @@ export function useMonitor(opts: {
       const { result, candidate } = evaluateVisual({ outcome, context: ctx, cropKey: selKey, capturedAt: frame.capturedAt, intervalSec, previous });
       previous = candidate;
       cycles += 1;
-      patch({ result, cycles, observation: outcome.ok ? outcome.observation : null, modelFailure: outcome.ok ? null : outcome });
+      failures = outcome.ok ? 0 : failures + 1;
+      patch({ result, cycles, failures, observation: outcome.ok ? outcome.observation : null, modelFailure: outcome.ok ? null : outcome });
     }
 
     void (async () => {
       while (!signal.aborted) {
         const started = Date.now();
         if ((await cycle()) === 'user' || signal.aborted) break;
-        const wait = Math.max(intervalSec * 1000 - (Date.now() - started), 1000);
-        patch({ phase: 'waiting', nextAt: Date.now() + wait });
+        const wait = nextDelayMs(intervalSec, Date.now() - started, failures);
+        patch(latest.current.sourceVisible === false ? { nextAt: Date.now() + wait } : { phase: 'waiting', nextAt: Date.now() + wait });
         await sleep(wait);
       }
     })();

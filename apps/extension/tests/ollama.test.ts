@@ -35,24 +35,24 @@ const clock = () => {
 
 describe('checkOllama', () => {
   it('reports ready when the model is installed and only calls loopback', async () => {
-    const { fn, calls } = fakeFetch(() => json({ models: [{ name: 'qwen3-vl:4b' }, { name: 'llama3:8b' }] }));
-    expect(await checkOllama('qwen3-vl:4b', fn)).toEqual({ state: 'ready', installed: ['qwen3-vl:4b', 'llama3:8b'] });
+    const { fn, calls } = fakeFetch(() => json({ models: [{ name: 'qwen3-vl:4b-instruct' }, { name: 'llama3:8b' }] }));
+    expect(await checkOllama('qwen3-vl:4b-instruct', fn)).toEqual({ state: 'ready', installed: ['qwen3-vl:4b-instruct', 'llama3:8b'] });
     expect(calls.map((c) => c.url)).toEqual(['http://127.0.0.1:11434/api/tags']);
   });
 
   it('reports a missing model with what is installed', async () => {
-    const { fn } = fakeFetch(() => json({ models: [{ name: 'qwen3-vl:2b' }] }));
-    expect(await checkOllama('qwen3-vl:4b', fn)).toEqual({ state: 'model_missing', installed: ['qwen3-vl:2b'] });
+    const { fn } = fakeFetch(() => json({ models: [{ name: 'qwen3-vl:2b-instruct' }] }));
+    expect(await checkOllama('qwen3-vl:4b-instruct', fn)).toEqual({ state: 'model_missing', installed: ['qwen3-vl:2b-instruct'] });
   });
 
   it('reports unreachable when fetch fails (not running, or origin refused by CORS)', async () => {
     const { fn } = fakeFetch(() => Promise.reject(new TypeError('Failed to fetch')));
-    expect(await checkOllama('qwen3-vl:4b', fn)).toEqual({ state: 'unreachable' });
+    expect(await checkOllama('qwen3-vl:4b-instruct', fn)).toEqual({ state: 'unreachable' });
   });
 
   it('reports an error for HTTP failures and malformed replies', async () => {
-    expect((await checkOllama('qwen3-vl:4b', fakeFetch(() => json({}, 403)).fn)).state).toBe('error');
-    expect((await checkOllama('qwen3-vl:4b', fakeFetch(() => json({ nope: 1 })).fn)).state).toBe('error');
+    expect((await checkOllama('qwen3-vl:4b-instruct', fakeFetch(() => json({}, 403)).fn)).state).toBe('error');
+    expect((await checkOllama('qwen3-vl:4b-instruct', fakeFetch(() => json({ nope: 1 })).fn)).state).toBe('error');
   });
 });
 
@@ -63,15 +63,16 @@ describe('gateNotes', () => {
 });
 
 describe('observeChart', () => {
-  const base = { pngBase64: 'AAAA', capturedAt: '2026-11-10T07:59:58Z', model: 'qwen3-vl:4b' as const };
+  const base = { pngBase64: 'AAAA', capturedAt: '2026-11-10T07:59:58Z', model: 'qwen3-vl:4b-instruct' as const };
 
   it('sends only the given image with a JSON schema and returns a gated visual-only observation', async () => {
     const { fn, calls } = fakeFetch(() => reply(GOOD));
     const out = await observeChart({ ...base, signal: new AbortController().signal, fetchFn: fn, now: clock() });
     expect(calls[0]!.url).toBe('http://127.0.0.1:11434/api/chat');
     const body = JSON.parse(String(calls[0]!.init!.body)) as Record<string, unknown> & { messages: { images: string[] }[] };
-    expect(body.model).toBe('qwen3-vl:4b');
+    expect(body.model).toBe('qwen3-vl:4b-instruct');
     expect(body.stream).toBe(false);
+    expect(body.think).toBe(false); // thinking builds are far too slow for short horizons
     expect(body.messages[0]!.images).toEqual(['AAAA']);
     expect(body.format).toMatchObject({ type: 'object', required: expect.arrayContaining(['visibleTrend', 'notes']) });
 
@@ -79,7 +80,7 @@ describe('observeChart', () => {
     if (!out.ok) return;
     expect(out.observation).toMatchObject({
       source: 'visual_only',
-      observationMethod: 'ollama:qwen3-vl:4b',
+      observationMethod: 'ollama:qwen3-vl:4b-instruct',
       visibleTrend: 'upward_appearance',
       notes: ['recent candles slope upward'],
       droppedNotes: 1,

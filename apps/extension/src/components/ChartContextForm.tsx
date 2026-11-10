@@ -1,7 +1,7 @@
 import { formatDuration } from '../sidepanel/format';
 import type { ChartContext, InstrumentType } from '../types/market';
 
-const TIMEFRAMES = [60, 300, 900, 1800, 3600, 14_400, 86_400];
+const TIMEFRAMES = [5, 10, 15, 30, 60, 300, 900, 1800, 3600, 14_400, 86_400];
 const HORIZONS = [30, 60, 120, 300, 600, 900, 1800, 3600, 14_400, 86_400];
 
 const field = 'w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 disabled:opacity-50';

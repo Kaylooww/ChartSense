@@ -245,7 +245,14 @@ export function createBackground(deps: BackgroundDeps) {
     });
   }
 
-  return { handleMessage, onToolbarClick, onTabUpdated, onTabRemoved };
+  /** Closing the side panel pauses an active session, so reopening it never resumes capture silently. */
+  async function onPanelClosed(): Promise<void> {
+    await mutex.run(async () => {
+      await apply({ type: 'PAUSE' }); // rejected (no-op) unless the session is active
+    });
+  }
+
+  return { handleMessage, onToolbarClick, onTabUpdated, onTabRemoved, onPanelClosed };
 }
 
 export type Background = ReturnType<typeof createBackground>;

@@ -74,7 +74,8 @@ export function evaluateVisual(input: VisualInput): { result: AnalysisResult; ca
   ];
   if (missing.length || context.chartTimeframeSec === null || context.predictionHorizonSec === null) {
     reasonCodes.push('MISSING_CONTEXT');
-    return done('INSUFFICIENT_DATA', 'Fill in the chart context to get signals.', missing);
+    const names: Record<string, string> = { assetLabel: 'asset label', chartTimeframeSec: 'chart timeframe', predictionHorizonSec: 'prediction horizon' };
+    return done('INSUFFICIENT_DATA', `Fill in: ${missing.map((f) => names[f]).join(', ')}.`, missing);
   }
 
   if (!outcome.ok) {

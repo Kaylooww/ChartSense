@@ -50,6 +50,14 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
   return true; // keep the message channel open for the async response
 });
 
+// The side panel holds a port open while it is visible; when it closes, monitoring pauses.
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== 'sidepanel' || !port.sender?.url?.startsWith(chrome.runtime.getURL('sidepanel.html'))) return;
+  port.onDisconnect.addListener(() => {
+    background.onPanelClosed().catch(logError);
+  });
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   background.onTabUpdated(tabId, changeInfo, tab).catch(logError);
 });

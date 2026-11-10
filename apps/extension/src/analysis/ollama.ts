@@ -6,7 +6,8 @@ import { z } from 'zod';
  * and only the cropped chart (never the full tab screenshot) is sent.
  */
 export const OLLAMA_URL = 'http://127.0.0.1:11434';
-export const VISION_MODELS = ['qwen3-vl:4b', 'qwen3-vl:2b'] as const;
+// Instruct builds answer fastest; the default `qwen3-vl:4b` tag is a thinking build (works with think: false, slower).
+export const VISION_MODELS = ['qwen3-vl:4b-instruct', 'qwen3-vl:2b-instruct', 'qwen3-vl:4b'] as const;
 export type VisionModel = (typeof VISION_MODELS)[number];
 
 /** Fixed vocabulary of visual patterns the model may report; the visual rule only understands these. */
@@ -105,6 +106,7 @@ export async function observeChart(opts: {
       signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
       body: JSON.stringify({
         model,
+        think: false,
         stream: false,
         format: z.toJSONSchema(ModelObservationSchema),
         options: { temperature: 0 },

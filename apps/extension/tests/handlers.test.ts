@@ -242,6 +242,14 @@ describe('tab events', () => {
     expect(h.session().lastError?.code).toBe('SOURCE_CLOSED');
   });
 
+  it('pauses an active session when the side panel closes, and does nothing otherwise', async () => {
+    await startedSession(h);
+    await h.bg.onPanelClosed();
+    expect(h.session().status).toBe('paused');
+    await h.bg.onPanelClosed();
+    expect(h.session().status).toBe('paused');
+  });
+
   it('ignores other tabs being closed', async () => {
     await startedSession(h);
     await h.bg.onTabRemoved(12345);

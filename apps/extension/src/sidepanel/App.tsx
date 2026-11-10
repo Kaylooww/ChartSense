@@ -2,25 +2,25 @@ import { useState } from 'react';
 import { AnalysisPanel } from '../components/AnalysisPanel';
 import { CropResult } from '../components/CropResult';
 import { CropSelector } from '../components/CropSelector';
-import { EMPTY_CONTEXT } from '../components/ChartContextForm';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { Header } from '../components/Header';
-import { INTERVALS, MonitorPanel } from '../components/MonitorPanel';
+import { JournalPanel } from '../components/JournalPanel';
+import { MonitorPanel } from '../components/MonitorPanel';
 import { OnboardingGate } from '../components/OnboardingGate';
 import { RiskNotice } from '../components/RiskNotice';
 import { SessionControls } from '../components/SessionControls';
 import { SourceCard } from '../components/SourceCard';
-import { VISION_MODELS, type VisionModel } from '../analysis/ollama';
-import type { ChartContext } from '../types/market';
 import { sendRequest } from './api';
 import { useCaptureFlow } from './hooks/useCaptureFlow';
 import { useCrop } from './hooks/useCrop';
+import { useJournal } from './hooks/useJournal';
 import { useMonitor } from './hooks/useMonitor';
+import { useMonitorSettings } from './hooks/useMonitorSettings';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useSession } from './hooks/useSession';
 import { useSourceVisible } from './hooks/useSourceVisible';
 
-type Tab = 'capture' | 'dev' | 'about';
+type Tab = 'capture' | 'journal' | 'dev' | 'about';
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('capture');
@@ -29,9 +29,8 @@ export default function App() {
   const flow = useCaptureFlow(session);
   const sourceVisible = useSourceVisible(session?.source ?? null);
   const crop = useCrop(flow.frame, flow.selection, flow.stale === null);
-  const [context, setContext] = useState<ChartContext>(EMPTY_CONTEXT);
-  const [model, setModel] = useState<VisionModel>(VISION_MODELS[0]);
-  const [intervalSec, setIntervalSec] = useState(INTERVALS[1]!);
+  const journal = useJournal();
+  const [settings, updateSettings] = useMonitorSettings();
   // Monitoring runs exactly while the session is active: Pause, Stop, tab loss or closing the panel end it.
   const monitor = useMonitor({
     active: session?.status === 'active' && onboarding.accepted === true,
@@ -39,10 +38,11 @@ export default function App() {
     selection: flow.selection,
     selectionLayout: session?.selection?.layout ?? null,
     stale: flow.stale !== null,
+    sourceVisible,
     captureOnce: flow.captureOnce,
-    context,
-    intervalSec,
-    model,
+    context: settings.context,
+    intervalSec: settings.intervalSec,
+    model: settings.model,
   });
 
   const send = (type: 'START_SESSION' | 'PAUSE_SESSION' | 'RESUME_SESSION' | 'STOP_SESSION') =>
@@ -63,10 +63,11 @@ export default function App() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-3 p-3">
       <Header />
 
-      <div role="tablist" aria-label="Sections" className="grid grid-cols-3 gap-1 rounded-md bg-zinc-900 p-1 text-sm">
+      <div role="tablist" aria-label="Sections" className="grid grid-cols-4 gap-1 rounded-md bg-zinc-900 p-1 text-sm">
         {(
           [
             ['capture', 'Monitor'],
+            ['journal', 'Journal'],
             ['dev', 'Developer'],
             ['about', 'About & risk'],
           ] as const
@@ -89,8 +90,10 @@ export default function App() {
       {tab === 'about' ? (
         <section aria-label="About and risk notice" className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4">
           <RiskNotice />
-          <p className="text-xs text-zinc-500">ChartSense v0.1.0 · Phase 2 + live local-AI monitoring · paper trading only</p>
+          <p className="text-xs text-zinc-500">ChartSense v0.1.0 · live local-AI monitoring + paper-trading journal · paper trading only</p>
         </section>
+      ) : tab === 'journal' ? (
+        <JournalPanel journal={journal} />
       ) : tab === 'dev' ? (
         <AnalysisPanel />
       ) : !onboarding.accepted ? (
@@ -121,25 +124,24 @@ export default function App() {
 
           <MonitorPanel
             view={monitor}
-            context={context}
-            onContext={(patch) => setContext((c) => ({ ...c, ...patch }))}
-            model={model}
-            onModel={setModel}
-            intervalSec={intervalSec}
-            onInterval={setIntervalSec}
+            settings={settings}
+            onSettings={updateSettings}
+            journal={journal}
           />
 
-          {flow.frame ? (
-            <>
-              <CropSelector
-                frame={flow.frame}
-                selection={flow.selection}
-                stale={flow.stale}
-                onCommit={flow.commitSelection}
-                onClear={flow.clearSelection}
-              />
-              <CropResult crop={crop} />
-            </>
+          {flow.frame && flow.selection && !flow.stale ? (
+            // Region chosen: keep the screenshot out of the way; it stays one click away for re-selecting.
+            <details className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                Chart region selected · show screenshot and selection
+              </summary>
+              <div className="mt-3 space-y-3">
+                <CropSelector frame={flow.frame} selection={flow.selection} stale={flow.stale} onCommit={flow.commitSelection} onClear={flow.clearSelection} />
+                <CropResult crop={crop} />
+              </div>
+            </details>
+          ) : flow.frame ? (
+            <CropSelector frame={flow.frame} selection={flow.selection} stale={flow.stale} onCommit={flow.commitSelection} onClear={flow.clearSelection} />
           ) : null}
 
           <footer className="mt-auto pt-2 text-[11px] leading-relaxed text-zinc-500">

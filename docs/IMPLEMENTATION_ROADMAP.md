@@ -10,9 +10,9 @@ one meets its completion criteria.
 | 1: Capture | Permission-aware screenshot, crop tool, source checks, error UI, mock chart page | **Done** (v0.1.0) |
 | 2: Deterministic analysis | OHLC import/validation, tested indicators, structured UP/DOWN/WAIT result | **Done** (v0.1.0) |
 | 3: Screen interpretation | Image-quality and label recognition, observation vs OHLC separation | **Done, with local AI** (D-020, D-021) |
-| 4: Journal | Paper trades, settlement, P&L, export/import, strategy versions | Next |
-| 5: Opt-in monitoring | Slow periodic capture with stale-data protection | **Done early** at owner's request (D-022); latency not yet benchmarked on a real model |
-| 6: Optional service | Local OpenCV/FastAPI or opt-in vision model | Vision model done via Ollama directly (no service); OpenCV not started |
+| 4: Journal | Paper trades, settlement, P&L, export/import, strategy versions | **Done** (D-023; manual settlement, export only) |
+| 5: Opt-in monitoring | Slow periodic capture with stale-data protection | **Done** (D-022, D-025; benchmarked on the owner's RTX 4060) |
+| 6: Optional service | Local OpenCV/FastAPI or opt-in vision model | Optional. Vision model already done via Ollama directly (no service); OpenCV only if journal results justify it |
 
 ---
 
@@ -59,18 +59,41 @@ Goal: a verified rule engine on **imported or synthetic OHLC bars**, never on sc
 
 **Known limitations:** the analysis describes the series as of its last bar; there is no live staleness gate yet (no live feed exists). The horizon is recorded and must be at least one candle, but baseline-v0.1 does not otherwise model it. No volatility/gap-instability filter. Thresholds are hypotheses, not validated settings.
 
-## Live local-AI monitoring (2026-11-10, owner reprioritized)
+## Phase 3: Screen interpretation (done, with local AI)
 
-The owner asked for real-time website analysis instead of file uploads, which pulled Phase 3, the monitoring part of Phase 5 and the vision part of Phase 6 forward.
+On 2026-11-10 the owner asked for live website analysis instead of file uploads, so Phase 3 was built around an optional local vision model (D-020, D-021) instead of hand-written image parsing.
 
-- [x] `analysis/ollama.ts`: connection check, `/api/chat` with a JSON-schema response format, Zod validation, digit-note gate, timeout and cancel.
-- [x] `signals/visual.ts` (`visual-v0.1`): deterministic rule over visual observations, two-snapshot confirmation, stale-snapshot and horizon checks.
-- [x] `sidepanel/hooks/useMonitor.ts`: single-flight capture, crop, model, rule loop; waits for region selection; restarts on input change.
-- [x] Monitor tab: context form, model and interval, Ollama status and setup steps, last analysis / next capture, detected patterns, result card. OHLC import moved to the Developer tab.
-- [x] CSP locked to loopback Ollama; security tests updated.
-- [ ] Benchmark real `qwen3-vl:4b` latency and VRAM on the owner's RTX 4060 and tune the default interval.
-- [ ] Measure how often the model's pattern readings are right (needs the Phase 4 journal).
+- [x] `analysis/ollama.ts`: connection check, `/api/chat` with a JSON-schema response format, `think: false`, Zod validation, fixed pattern vocabulary, notes with digits hidden, timeout and cancel.
+- [x] `signals/visual.ts` (`visual-v0.1`): deterministic rule over visual observations (trend + structure + breakout on two consecutive snapshots), stale-snapshot and horizon checks; WAIT / INSUFFICIENT_DATA otherwise.
+- [x] Visual observations kept separate from OHLC: `source: visual_only`, no indicator values, no confidence.
+- [x] CSP locked to loopback Ollama; security tests updated (D-020).
+- [ ] Measure how often the model's pattern readings are right (use the Phase 4 journal).
 
-## Phases 3 to 6
+## Phase 4: Journal (done)
 
-See `PROJECT_CONTEXT.md` section 12. Do not begin Phase 6, Supabase or authentication until Phases 2 to 5 work.
+- [x] `journal/journal.ts`: trade schema, create (UP/DOWN only, expiry = entry + horizon), settle (refused before expiry), stats (hit rate, break-even, net P&L, drawdown, sample warning, groups), CSV export. Unit-tested.
+- [x] `hooks/useJournal.ts`: chrome.storage.local, validated on read, corrupt entries kept and reported, not overwritten.
+- [x] Monitor tab: stake + payout inputs and "Record paper trade" on UP / DOWN; Journal tab with settle buttons, stats, export, delete.
+- [x] Signal tone + flash, collapsed screenshot after selection, `think: false` (D-024).
+- [ ] Import of exported journals.
+- [ ] Optional: settle from verified prices once an authorized price source exists.
+
+**Verified:** Chrome 156 with a stand-in Ollama: UP signal recorded, OPEN with countdown, settle buttons only after expiry, Won gives 100% hit rate vs 55.6% break-even at 80% payout, +0.80 units.
+
+## Phase 5: Opt-in monitoring (done)
+
+- [x] `hooks/useMonitor.ts`: Start monitoring runs capture -> crop -> model -> rule, one cycle at a time (no overlap, no queue), waits for a region selection, restarts and hides old results when region, context, interval or model change (D-022).
+- [x] Back-off: after consecutive model failures the wait doubles up to 60 s; one success resets it (`monitorTiming.ts`, tested).
+- [x] Chart tab in the background: cycles are skipped with a clear status, no capture errors.
+- [x] Closing the side panel pauses the session; reopening never resumes capture by itself (port + `onPanelClosed`, tested).
+- [x] Settings (context, model, interval, sound, stake, payout) saved locally; each bad value falls back on its own.
+- [x] Stale data: snapshot older than half the horizon -> WAIT; Stop / navigation / tab close / lost permission end monitoring.
+- [x] Signal tone + flash only when a direction appears or flips (alert throttle).
+- [x] Benchmark (2026-11-10, owner's RTX 4060, installed `qwen3-vl:4b` with `think: false`): 15 s first answer, then 10 to 11 s; GPU memory peak about 6.1 GB of 8 GB (about 4.8 GB for the model). Default interval stays 10 s; horizons of 30 s or more pass the stale check.
+- [ ] Benchmark the `qwen3-vl:4b-instruct` build once pulled.
+
+**Verified in Chrome 156 (automated, stand-in Ollama):** monitoring captures every 5 s, closing the panel turns "Capturing" into "Paused", settings come back after reopening, Stop ends everything.
+
+## Phase 6 (optional)
+
+Only if journal results show the visual signals need better recognition: local OpenCV or a different model. Do not add Supabase or authentication.

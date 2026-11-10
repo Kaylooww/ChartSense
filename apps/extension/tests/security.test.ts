@@ -32,10 +32,18 @@ describe('manifest permissions (least privilege)', () => {
     expect(manifest.commands).toBeUndefined();
   });
 
-  it('uses a strict extension-page CSP with no remote or inline script', () => {
+  it('uses a strict extension-page CSP: no remote or inline script, network only to local Ollama', () => {
     const csp = (manifest.content_security_policy as { extension_pages: string }).extension_pages;
-    expect(csp).toContain("script-src 'self'");
-    expect(csp).not.toMatch(/unsafe-eval|unsafe-inline|https?:|\*/);
+    const directives = Object.fromEntries(
+      csp.split(';').map((d) => d.trim().split(/\s+/)).map(([name, ...values]) => [name, values.join(' ')]),
+    );
+    expect(directives).toEqual({
+      'script-src': "'self'",
+      'object-src': "'self'",
+      // D-020: the only network destination is Ollama on loopback.
+      'connect-src': "'self' http://127.0.0.1:11434",
+    });
+    expect(csp).not.toMatch(/unsafe-eval|unsafe-inline|https:|\*/);
   });
 
   it('points at files that exist in the source tree', () => {
@@ -65,6 +73,12 @@ describe('no trading automation or site interference in source', () => {
     [/\.click\s*\(\)|dispatchEvent\s*\(/, 'synthetic clicks/events'],
     [/\/(place-?order|buy|sell|withdraw|deposit)\b/i, 'trading endpoint'],
   ];
+
+  it('only ever addresses local Ollama on loopback (D-020)', () => {
+    const urls = files.flatMap((file) => readFileSync(file, 'utf8').match(/\bhttps?:\/\/[^\s'"`)]+/g) ?? []);
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) expect(url).toBe('http://127.0.0.1:11434');
+  });
 
   it('scans a non-trivial number of source files', () => {
     expect(files.length).toBeGreaterThan(15);

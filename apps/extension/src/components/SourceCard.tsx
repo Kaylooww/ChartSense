@@ -15,13 +15,13 @@ const STATUS: Record<
   },
   armed: {
     label: 'Tab authorized',
-    hint: 'Press Start capture to begin a session. Nothing is captured until you do.',
+    hint: 'Press Start monitoring to begin. Nothing is captured until you do.',
     tone: 'border-sky-500/40 bg-sky-500/10 text-sky-300',
     Icon: ShieldCheck,
   },
   active: {
     label: 'Capturing',
-    hint: 'Session active. Press Capture once to take a screenshot. Automatic scanning is not built yet.',
+    hint: 'Monitoring: the chart is captured and analyzed at the chosen interval until you press Pause or Stop, or close this panel.',
     tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
     Icon: Radio,
   },

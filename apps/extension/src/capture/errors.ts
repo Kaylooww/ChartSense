@@ -17,7 +17,7 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
   SESSION_NOT_ACTIVE: {
     title: 'No capture session running',
     detail: 'Capturing needs an active session that you started.',
-    recovery: 'Press Start capture, then try again.',
+    recovery: 'Press Start monitoring, then try again.',
   },
   SESSION_PAUSED: {
     title: 'Session paused',
@@ -48,7 +48,7 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     title: 'Capture permission expired',
     detail:
       'Chrome grants tab access only temporarily (activeTab) and revokes it when the page navigates. Clicking buttons inside this panel does not renew it.',
-    recovery: 'Click the ChartSense icon in the Chrome toolbar while the chart tab is open, then Start capture again.',
+    recovery: 'Click the ChartSense icon in the Chrome toolbar while the chart tab is open, then Start monitoring again.',
   },
   UNCAPTURABLE_PAGE: {
     title: 'This page cannot be captured',

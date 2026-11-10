@@ -25,6 +25,6 @@
   },
   "permissions": ["sidePanel", "activeTab", "storage"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:11434"
   }
 }

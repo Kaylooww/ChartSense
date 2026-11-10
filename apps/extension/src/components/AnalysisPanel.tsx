@@ -2,26 +2,16 @@ import { FileUp, Play } from 'lucide-react';
 import { useId, useState, type ChangeEvent } from 'react';
 import { evaluateBaseline, STRATEGY_VERSION } from '../signals/baseline';
 import { MAX_IMPORT_BYTES, parseOhlc } from '../signals/parseOhlc';
-import { formatDuration } from '../sidepanel/format';
-import type { AnalysisResult, ChartContext, InstrumentType } from '../types/market';
+import type { AnalysisResult, ChartContext } from '../types/market';
 import { AnalysisResultCard } from './AnalysisResultCard';
-
-const TIMEFRAMES = [60, 300, 900, 1800, 3600, 14_400, 86_400];
-const HORIZONS = [30, 60, 120, 300, 600, 900, 1800, 3600, 14_400, 86_400];
+import { ChartContextForm, EMPTY_CONTEXT } from './ChartContextForm';
 
 type Imported = { name: string; rows: unknown[]; synthetic: boolean } | { name: string; error: string } | null;
 
-const field = 'w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100';
-const label = 'space-y-1 text-xs text-zinc-400';
-
+/** Developer/testing tool: runs baseline-v0.1 on an imported OHLC file. Not part of live monitoring. */
 export function AnalysisPanel() {
   const ids = useId();
-  const [context, setContext] = useState<ChartContext>({
-    assetLabel: '',
-    instrumentType: 'fixed_expiry_demo',
-    chartTimeframeSec: null,
-    predictionHorizonSec: null, // never defaulted from the timeframe
-  });
+  const [context, setContext] = useState<ChartContext>(EMPTY_CONTEXT);
   const [imported, setImported] = useState<Imported>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
@@ -30,7 +20,6 @@ export function AnalysisPanel() {
     setContext((c) => ({ ...c, ...patch }));
     setResult(null);
   };
-  const seconds = (v: string) => (v === '' ? null : Number(v));
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -44,68 +33,16 @@ export function AnalysisPanel() {
   const ready = imported !== null && 'rows' in imported;
 
   return (
-    <section aria-label="Analysis" className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+    <section aria-label="OHLC test bench" className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">3 · Analysis</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">OHLC test bench (developer)</h2>
         <span className="font-mono text-[10px] text-zinc-500">{STRATEGY_VERSION}</span>
       </div>
       <p className="text-xs leading-relaxed text-zinc-400">
-        Indicators are computed only from OHLC bars you import, never from the screenshot.
+        For testing the indicator rules with historical or synthetic bars (see <code>fixtures/ohlc/</code>). Live monitoring does not use this.
       </p>
 
-      <div className="grid grid-cols-2 gap-2">
-        <label className={`${label} col-span-2`}>
-          <span>Asset label</span>
-          <input
-            className={field}
-            value={context.assetLabel}
-            maxLength={40}
-            placeholder="e.g. MOCK/USD"
-            onChange={(e) => update({ assetLabel: e.target.value })}
-          />
-        </label>
-        <label className={`${label} col-span-2`}>
-          <span>Instrument type</span>
-          <select
-            className={field}
-            value={context.instrumentType}
-            onChange={(e) => update({ instrumentType: e.target.value as InstrumentType })}
-          >
-            <option value="fixed_expiry_demo">Fixed-expiry (demo) · UP / DOWN / WAIT</option>
-            <option value="conventional_demo">Conventional (demo) · BUY / SELL / WAIT</option>
-          </select>
-        </label>
-        <label className={label}>
-          <span>Chart timeframe (one candle)</span>
-          <select
-            className={field}
-            value={context.chartTimeframeSec ?? ''}
-            onChange={(e) => update({ chartTimeframeSec: seconds(e.target.value) })}
-          >
-            <option value="">Choose…</option>
-            {TIMEFRAMES.map((s) => (
-              <option key={s} value={s}>
-                {formatDuration(s)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={label}>
-          <span>Prediction horizon</span>
-          <select
-            className={field}
-            value={context.predictionHorizonSec ?? ''}
-            onChange={(e) => update({ predictionHorizonSec: seconds(e.target.value) })}
-          >
-            <option value="">Choose…</option>
-            {HORIZONS.map((s) => (
-              <option key={s} value={s}>
-                {formatDuration(s)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <ChartContextForm value={context} onChange={update} />
 
       <div className="space-y-1">
         <label htmlFor={`${ids}-file`} className="flex items-center gap-1.5 text-xs text-zinc-400">

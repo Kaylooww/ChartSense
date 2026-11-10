@@ -71,3 +71,16 @@ Record each major decision here and keep `PROJECT_CONTEXT.md` consistent. Newest
 
 ## D-019: Still no shadcn/ui
 **Decision:** the Phase 2 form is four native inputs and a file input styled with Tailwind; adding shadcn/ui for that was not justified (revisits D-011 again for the Phase 4 journal tables).
+
+## D-020: Optional local vision via Ollama on loopback; network locked to it
+**Decision (owner request, 2026-11-10):** the side panel calls Ollama at `http://127.0.0.1:11434` (`qwen3-vl:4b`, or `qwen3-vl:2b` if 4B is too slow). The manifest CSP now has `connect-src 'self' http://127.0.0.1:11434`, so no other network destination is possible, and `tests/security.test.ts` asserts that exact CSP and that the only URL in `src/` is that one. No host permission was added: the user allows the extension in Ollama by setting `OLLAMA_ORIGINS=chrome-extension://<id>`. Only the cropped, downscaled chart is sent. No paid API, no cloud.
+**Why:** free and local, as the owner requires; least privilege. **Trade-off:** setup needs one environment variable; until then Ollama answers 403 and the browser reports it as unreachable (verified against Ollama 0.40.15).
+
+## D-021: Screenshot-based signals via the deterministic `visual-v0.1` rule
+**Decision (owner request):** live monitoring may show UP / DOWN from screenshots, but the model only reports constrained visual observations (trend appearance, a fixed list of patterns, image quality). `signals/visual.ts`, not the model, decides: UP needs an upward appearance + higher highs/lows + a visible breakout on **two consecutive snapshots of the same region**; DOWN is symmetric. Anything else is WAIT; unreadable charts, model failures and missing context are INSUFFICIENT_DATA; a snapshot older than half the horizon is WAIT. Notes containing digits are hidden, no prices or indicator values are ever derived from pixels, and no confidence is produced. Result `source` is `visual_only`.
+**Why:** the owner wants real-time website analysis instead of file uploads. This changes PROJECT_CONTEXT.md FR-03/FR-04, which previously limited screenshots to WAIT / INSUFFICIENT DATA. **Risk:** vision models misread charts; the rule is an uncalibrated hypothesis and must be judged by paper trading (Phase 4).
+
+## D-022: Monitoring is a side-panel loop tied to the session; OHLC import moved to a Developer tab
+**Decision:** Start monitoring = start session; the panel then captures, crops, analyzes and waits, one cycle at a time (next start = interval after the previous start, at least 1 s after it ends), so requests never overlap or queue. Pause, Stop, tab navigation/close, lost permission or closing the panel end it; a background tab only skips cycles. A new region, context, interval or model restarts the loop and hides the old result. The loop waits (no recapture) until a region is selected. Default interval 10 s, configurable 5 to 60 s. The Phase 2 OHLC file import is now the **Developer** tab's test bench, not part of monitoring.
+**Why:** panel-driven timers stop when the panel closes (no hidden background surveillance) and avoid MV3 service-worker lifetime issues.
+

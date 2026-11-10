@@ -17,7 +17,7 @@ const SOURCE_LABEL: Record<DataSource, string> = {
   demo_fixture: 'Demo fixture (synthetic)',
   imported_ohlc: 'Imported OHLC (source not verified)',
   authorized_feed: 'Authorized feed',
-  visual_only: 'Visual only',
+  visual_only: 'Screenshot, local AI (visual only)',
 };
 
 /** Conventional instruments show UP as BUY and DOWN as SELL; fixed-expiry keeps UP and DOWN. */
@@ -31,6 +31,7 @@ const n = (v: number) => (Math.abs(v) >= 1000 ? v.toFixed(2) : v.toPrecision(6))
 
 export function AnalysisResultCard({ result: r }: { result: AnalysisResult }) {
   const { tone, Icon } = STATUS[r.status];
+  const visual = r.source === 'visual_only';
   const rows: [string, string][] = [
     ['Asset', r.assetLabel || '—'],
     ['Instrument', r.instrumentType === 'fixed_expiry_demo' ? 'Fixed-expiry (demo)' : 'Conventional (demo)'],
@@ -38,8 +39,12 @@ export function AnalysisResultCard({ result: r }: { result: AnalysisResult }) {
     ['Prediction horizon', r.predictionHorizonSec ? formatDuration(r.predictionHorizonSec) : '—'],
     ['Data source', SOURCE_LABEL[r.source]],
     ['Analyzed at', formatLocalTime(r.analyzedAt)],
-    ['As of bar (open)', r.lastBarTime ? new Date(r.lastBarTime).toLocaleString(undefined, { timeZoneName: 'short' }) : '—'],
-    [r.barDataVerified ? 'Bars used' : 'Rows read (rejected)', String(r.barCount)],
+    ...(visual
+      ? []
+      : ([
+          ['As of bar (open)', r.lastBarTime ? new Date(r.lastBarTime).toLocaleString(undefined, { timeZoneName: 'short' }) : '—'],
+          [r.barDataVerified ? 'Bars used' : 'Rows read (rejected)', String(r.barCount)],
+        ] as [string, string][])),
     ['Strategy', r.strategyVersion],
   ];
 

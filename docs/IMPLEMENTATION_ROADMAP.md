@@ -9,10 +9,10 @@ one meets its completion criteria.
 | 0: Foundation | Vite + React + TypeScript + Tailwind MV3 extension, lint, tests, side panel shell | **Done** (v0.1.0) |
 | 1: Capture | Permission-aware screenshot, crop tool, source checks, error UI, mock chart page | **Done** (v0.1.0) |
 | 2: Deterministic analysis | OHLC import/validation, tested indicators, structured UP/DOWN/WAIT result | **Done** (v0.1.0) |
-| 3: Screen interpretation | Image-quality and label recognition, observation vs OHLC separation | Next |
-| 4: Journal | Paper trades, settlement, P&L, export/import, strategy versions | Not started |
-| 5: Opt-in monitoring | Slow periodic capture with stale-data protection | Not started |
-| 6: Optional service | Local OpenCV/FastAPI or opt-in vision model | Not started (only if justified) |
+| 3: Screen interpretation | Image-quality and label recognition, observation vs OHLC separation | **Done, with local AI** (D-020, D-021) |
+| 4: Journal | Paper trades, settlement, P&L, export/import, strategy versions | Next |
+| 5: Opt-in monitoring | Slow periodic capture with stale-data protection | **Done early** at owner's request (D-022); latency not yet benchmarked on a real model |
+| 6: Optional service | Local OpenCV/FastAPI or opt-in vision model | Vision model done via Ollama directly (no service); OpenCV not started |
 
 ---
 
@@ -58,6 +58,18 @@ Goal: a verified rule engine on **imported or synthetic OHLC bars**, never on sc
 **Completion criteria met:** fixture bars give a deterministic, explained result; incomplete or invalid bars give INSUFFICIENT_DATA; every result card shows source, analysis time, as-of bar, timeframe, horizon and strategy version. Verified in Chrome 156 (see README).
 
 **Known limitations:** the analysis describes the series as of its last bar; there is no live staleness gate yet (no live feed exists). The horizon is recorded and must be at least one candle, but baseline-v0.1 does not otherwise model it. No volatility/gap-instability filter. Thresholds are hypotheses, not validated settings.
+
+## Live local-AI monitoring (2026-11-10, owner reprioritized)
+
+The owner asked for real-time website analysis instead of file uploads, which pulled Phase 3, the monitoring part of Phase 5 and the vision part of Phase 6 forward.
+
+- [x] `analysis/ollama.ts`: connection check, `/api/chat` with a JSON-schema response format, Zod validation, digit-note gate, timeout and cancel.
+- [x] `signals/visual.ts` (`visual-v0.1`): deterministic rule over visual observations, two-snapshot confirmation, stale-snapshot and horizon checks.
+- [x] `sidepanel/hooks/useMonitor.ts`: single-flight capture, crop, model, rule loop; waits for region selection; restarts on input change.
+- [x] Monitor tab: context form, model and interval, Ollama status and setup steps, last analysis / next capture, detected patterns, result card. OHLC import moved to the Developer tab.
+- [x] CSP locked to loopback Ollama; security tests updated.
+- [ ] Benchmark real `qwen3-vl:4b` latency and VRAM on the owner's RTX 4060 and tune the default interval.
+- [ ] Measure how often the model's pattern readings are right (needs the Phase 4 journal).
 
 ## Phases 3 to 6
 

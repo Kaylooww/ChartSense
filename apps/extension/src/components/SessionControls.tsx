@@ -50,7 +50,7 @@ export function SessionControls({ session, busy, sourceVisible, onStart, onCaptu
     <section aria-label="Capture controls" className="grid grid-cols-2 gap-2">
       <Button variant="primary" onClick={onStart} disabled={status !== 'armed'}>
         <Play className="size-4" aria-hidden />
-        Start capture
+        Start monitoring
       </Button>
       <Button onClick={onCaptureOnce} disabled={!canCapture}>
         <Camera className="size-4" aria-hidden />

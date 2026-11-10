@@ -17,7 +17,8 @@ export interface CaptureFlow {
   selection: RelRect | null;
   /** Set when the page layout changed since the selection was drawn. */
   stale: SelectionStaleReason | null;
-  captureOnce: () => void;
+  /** Resolves with the new frame, or null if it failed or a newer request/Stop superseded it. */
+  captureOnce: () => Promise<CaptureFrame | null>;
   commitSelection: (rel: RelRect) => void;
   clearSelection: () => void;
   dismissError: () => void;
@@ -71,13 +72,17 @@ export function useCaptureFlow(session: SessionState | null): CaptureFlow {
     latestRequestId.current = requestId;
     setBusy(true);
     setLocalError(null);
-    void sendRequest<CaptureFrame>({ type: 'CAPTURE_ONCE', requestId }).then((response) => {
+    return sendRequest<CaptureFrame>({ type: 'CAPTURE_ONCE', requestId }).then((response) => {
       // A newer request, or a Stop, superseded this one: discard the answer.
-      if (latestRequestId.current !== requestId) return;
+      if (latestRequestId.current !== requestId) return null;
       latestRequestId.current = null;
       setBusy(false);
-      if (response.ok && response.data.requestId === requestId) setFrame(response.data);
-      else if (!response.ok) setLocalError(response.error);
+      if (response.ok && response.data.requestId === requestId) {
+        setFrame(response.data);
+        return response.data;
+      }
+      if (!response.ok) setLocalError(response.error);
+      return null;
     });
   }, []);
 
